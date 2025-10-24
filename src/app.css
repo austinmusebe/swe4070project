@@ -1,3 +1,9 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+.title {
+	font-size: 42px;
+	padding: 20px;
+	margin: 20px;
+}
