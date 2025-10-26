@@ -3,35 +3,43 @@
     <nav>
         <ul class="header-content">
             <li class="business">Bees' Ness</li>
-            <li><a href="/">Home</a></li>
-            <li><a href="/">Manage Account</a></li>
-            <li><a href="/">Register / Login</a></li>
+            <div class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/">Manage Account</a></li>
+                <li><a href="/">Register / Login</a></li>
+            </div>
         </ul>
     </nav>
-
 </header>
-<!-- styles -->
+
  <style>
     header {
-        align-items: flex-end;
-        justify-content: flex-end;
-        display: flex;
-        background-color: grey;
+        background-color: #dddddd;
     }
     .header-content{
-        align-items: flex-end;
         display: flex;
-        flex-direction: row;
-        padding: 20px;
-        gap: 20px;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
+        list-style: none;
+        /* gap: 20px; */
+        margin: 0;
     }
     .business{
         /* padding-right: 87%; */
-        position: absolute;
-        right: 90%;
-        margin-top: .5rem;
-        white-space: nowrap;
         font-size: 2rem;
+        white-space: nowrap;
+        padding-left: 10px;
+    }
+    .nav-links {
+        display: flex;
+        gap: 20px;
+        padding-right: 10px;
+    }
+    .nav-links a {
+        text-decoration: none;
+        color: #3f3f3f;
+    }
+    .nav-links a:hover {
+        text-decoration: underline;
     }
  </style>
