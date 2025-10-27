@@ -37,13 +37,23 @@
 </div>
 
 <style>
+	.product-card {
+		border: 1px solid #ddd;
+		border-radius: 8px;
+		overflow: auto;
+		align-items: center;
+		justify-content: center;
+		display: flex;
+		overflow: auto;
+		flex-direction: column;
+	}
 	.top-card {
 		background-color: black;
 		height: 200px;
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 20%;
+		width: 100%;
 		border-top-left-radius: 10px;
 		border-top-right-radius: 10px;
 	}
@@ -59,7 +69,7 @@
 		background-color: grey;
 		padding: 1rem;
 		color: white;
-		width: 20%;
+		width: 100%;
 		border-bottom-left-radius: 10px;
 		border-bottom-right-radius: 10px;
 	}
@@ -85,16 +95,6 @@
 		align-items: center;
 		justify-content: center;
 		display: flex;
-		flex-direction: column;
-	}
-	.product-card {
-		border: 1px solid #ddd;
-		border-radius: 8px;
-		overflow: hidden;
-		align-items: center;
-		justify-content: center;
-		display: flex;
-		overflow: auto;
 		flex-direction: column;
 	}
 	.change-quantity {

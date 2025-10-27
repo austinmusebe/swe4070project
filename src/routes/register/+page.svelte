@@ -1,0 +1,2 @@
+<!-- // User registration -->
+<h1>this is the registration page.</h1>
