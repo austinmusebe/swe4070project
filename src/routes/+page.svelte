@@ -3,14 +3,28 @@
 	import ProductCard from '../components/ProductCard.svelte';
 </script>
 
-<div class="product-holder">
-	<ProductCard />
-	<ProductCard />
+<h1 class="category-title">Default Landing Page</h1>
+<div class="product-row">
+	<h1 class="category-title">Category 1</h1>
+	<div class="product-holder">
+		<ProductCard />
+		<ProductCard />
+	</div>
 </div>
-<h1 class="title">Welcome to SvelteKit, Rabira</h1>
-<p class="p-4 text-base text-gray-400">
-	Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation
-</p>
+<div class="product-row">
+	<h1 class="category-title">Category 2</h1>
+	<div class="product-holder">
+		<ProductCard />
+		<ProductCard />
+	</div>
+</div>
+<div class="product-row">
+	<h1 class="category-title">Category 3</h1>
+	<div class="product-holder">
+		<ProductCard />
+		<ProductCard />
+	</div>
+</div>
 
 <style>
 	.product-holder {
@@ -20,5 +34,15 @@
 		align-items: center;
 		justify-content: center;
 		padding-top: 10px;
+	}
+	.product-row {
+		align-items: center;
+		justify-content: center;
+		display: flex;
+		flex-direction: column;
+	}
+	.category-title {
+		font-size: 2rem;
+		color: orangered;
 	}
 </style>

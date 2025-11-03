@@ -1,4 +1,7 @@
 <script>
+	import { text } from '@sveltejs/kit';
+	import Button from './Button.svelte';
+
 	let count = $state(0);
 	let product = {
 		name: 'Product',
@@ -32,7 +35,7 @@
 			<p class="item-count">{count}</p>
 			<button class="decrement" onclick={() => count--}>-</button>
 		</div>
-		<button class="cart">Add to Cart</button>
+		<Button text="Add to Cart" />
 	</div>
 </div>
 
@@ -84,12 +87,12 @@
 		padding: 5px;
 	}
 	.increment {
-		border-radius: 50%;
+		border-radius: 16px;
 		padding: 4px;
 	}
 	.decrement {
-		border-radius: 50%;
-		padding: 4px;
+		border-radius: 16px;
+		padding: 5px;
 	}
 	.quantity-buy {
 		align-items: center;

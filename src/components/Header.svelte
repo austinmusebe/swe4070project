@@ -1,7 +1,7 @@
 <header>
 	<nav>
 		<ul class="header-content">
-			<li class="business">Bees' Ness</li>
+			<li class="business"><a href="/">Bees' Ness</a></li>
 			<div class="nav-links">
 				<li><a href="/home">Home</a></li>
 				<li><a href="/account">Manage Account</a></li>
