@@ -1,12 +1,16 @@
+<script>
+	import Button from './Button.svelte';
+</script>
+
 <header>
 	<nav>
 		<ul class="header-content">
 			<li class="business"><a href="/">Bees' Ness</a></li>
 			<div class="nav-links">
-				<li><a href="/home">Home</a></li>
-				<li><a href="/account">Manage Account</a></li>
-				<li><a href="/register">Register</a></li>
-				<li><a href="/login"> Login</a></li>
+				<a href="/home">Home</a>
+				<a href="/account">Manage Account</a>
+				<a href="/login">Sign In</a>
+				<a href="/register" class="btn-register">Get Started</a>
 			</div>
 		</ul>
 	</nav>
@@ -37,9 +41,23 @@
 	}
 	.nav-links a {
 		text-decoration: none;
-		color: #3f3f3f;
+		color: #333;
+		font-weight: 500;
+		padding: 8px 16px;
+		border-radius: 8px;
+		transition: all 0.2s;
 	}
 	.nav-links a:hover {
 		text-decoration: underline;
+		color: #ff6b6b;
+	}
+	.btn-register {
+		background-color: #1a1a1a;
+		color: white !important;
+	}
+
+	.btn-register:hover {
+		background-color: #333 !important;
+		color: white !important;
 	}
 </style>
