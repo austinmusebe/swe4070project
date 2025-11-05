@@ -5,93 +5,216 @@
 	let password = $state('');
 </script>
 
-<!-- // User login -->
-<h1>this is the login page.</h1>
 <div class="container">
 	<div class="login-section">
 		<div class="left-card">
-			<img src="src/lib/assets/undefined.jpeg" alt="placeholder" class="placeholder" /> <br />
+			<img src="src/lib/assets/undefined.jpeg" alt="Login visual" class="placeholder" />
 		</div>
 		<div class="right-card">
 			<div class="details">
-				<h1>Log In To Your Account</h1>
-				<p>Don't have an account? <a href="/register">Register Here</a></p>
-				<input type="text" placeholder="Username" class="user-pass" />
-				<input type="password" placeholder="Password" class="user-pass" />
-			</div>
-			<div class="button-container">
-				<Button text="Log In" />
+				<h1>Welcome Back</h1>
+				<p>Don't have an account? <a href="/register">Sign up</a></p>
+
+				<form>
+					<div class="input-group">
+						<label for="username">Username</label>
+						<input
+							type="text"
+							id="username"
+							bind:value={username}
+							placeholder="Enter your username"
+							class="user-pass"
+						/>
+					</div>
+
+					<div class="input-group">
+						<label for="password">Password</label>
+						<input
+							type="password"
+							id="password"
+							bind:value={password}
+							placeholder="Enter your password"
+							class="user-pass"
+						/>
+					</div>
+
+					<a href="/forgot-password" class="forgot-link">Forgot password?</a>
+
+					<div class="button-container">
+						<Button text="Log In" />
+					</div>
+				</form>
 			</div>
 		</div>
 	</div>
 </div>
 
 <style>
+	:global(body) {
+		margin: 0;
+		padding: 0;
+		background-color: #f5f5f5;
+	}
+
 	.container {
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		height: 100vh;
+		min-height: 100vh;
+		padding: 20px;
 	}
+
 	.login-section {
-		background-color: red;
 		display: flex;
 		flex-direction: row;
-		/* height: 40%; */
-		justify-content: center;
-		align-items: stretch;
-		border-radius: 6px;
+		width: 100%;
+		max-width: 1000px;
+		min-height: 600px;
+		background-color: white;
+		border-radius: 16px;
+		box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+		overflow: hidden;
 	}
+
 	.left-card {
-		background-color: aquamarine;
-		/* height: 100%; */
+		flex: 1;
+		background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 40px;
+		position: relative;
+	}
+
+	.left-card::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background:
+			radial-gradient(circle at 20% 50%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
+			radial-gradient(circle at 80% 80%, rgba(255, 193, 7, 0.1) 0%, transparent 50%);
+	}
+
+	.placeholder {
+		max-width: 100%;
+		max-height: 400px;
+		border-radius: 12px;
+		object-fit: cover;
+		position: relative;
+		z-index: 1;
+	}
+
+	.right-card {
 		flex: 1;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-	}
-	.right-card {
-		background-color: #acc8e5;
-	}
-	input {
-		background-color: rgb(88, 88, 88);
-		color: white;
-		border-radius: 10px;
-	}
-	input:hover {
-		cursor: pointer;
-	}
-	input::placeholder {
-		color: white;
+		padding: 40px;
+		background-color: white;
 	}
 
 	.details {
-		display: flex;
-		flex-direction: column;
-		max-width: 50%;
-		margin: 20px;
+		width: 100%;
+		max-width: 400px;
 	}
-	.user-pass {
-		width: 50vw;
-	}
-	.button-container {
-		display: flex;
-		justify-content: center;
-		padding-bottom: 20px;
-	}
+
 	h1 {
 		font-size: 2rem;
-		color: white;
-		white-space: nowrap;
+		color: #1a1a1a;
+		margin: 0 0 8px 0;
+		font-weight: 600;
 	}
+
 	p {
-		font-size: 1rem;
-		white-space: nowrap;
+		font-size: 0.95rem;
+		color: #666;
+		margin: 0 0 32px 0;
 	}
+
 	a {
-		color: blue;
+		color: #ff6b6b;
+		text-decoration: none;
+		font-weight: 500;
+		transition: color 0.2s;
 	}
-	.placeholder {
-		width: 30vh;
+
+	a:hover {
+		color: #ff5252;
+	}
+
+	form {
+		width: 100%;
+	}
+
+	.input-group {
+		margin-bottom: 20px;
+	}
+
+	label {
+		display: block;
+		font-size: 0.9rem;
+		font-weight: 500;
+		color: #333;
+		margin-bottom: 8px;
+	}
+
+	input {
+		width: 100%;
+		padding: 14px 16px;
+		background-color: #f8f8f8;
+		color: #1a1a1a;
+		border: 2px solid transparent;
+		border-radius: 10px;
+		font-size: 0.95rem;
+		transition: all 0.2s;
+		box-sizing: border-box;
+	}
+
+	input:focus {
+		outline: none;
+		background-color: white;
+		border-color: #ff6b6b;
+	}
+
+	input:hover {
+		background-color: #f0f0f0;
+	}
+
+	input::placeholder {
+		color: #999;
+	}
+
+	.forgot-link {
+		display: block;
+		text-align: right;
+		font-size: 0.9rem;
+		margin-bottom: 24px;
+	}
+
+	.button-container {
+		margin-top: 24px;
+	}
+
+	/* Responsive */
+	@media (max-width: 768px) {
+		.login-section {
+			flex-direction: column;
+			min-height: auto;
+		}
+
+		.left-card {
+			min-height: 250px;
+		}
+
+		.placeholder {
+			max-height: 200px;
+		}
+
+		h1 {
+			font-size: 1.75rem;
+		}
 	}
 </style>
