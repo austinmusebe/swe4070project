@@ -1,20 +1,32 @@
 <script>
-	import { text } from '@sveltejs/kit';
 	import Button from './Button.svelte';
+	import { cart, isCartOpen } from '../stores/cart.js';
 
-	let count = $state(0);
-	let product = {
-		name: 'Product',
-		price: 0,
-		image: '',
-		description: ''
-	};
+	// Use let instead of default object
+	let {
+		product = {
+			id: Math.random().toString(36).substr(2, 9),
+			name: 'Product',
+			price: 0,
+			image: '',
+			description: ''
+		}
+	} = $props();
+
+	let count = $state(1);
+
+	function addToCart() {
+		if (count > 0) {
+			cart.addItem(product, count);
+			isCartOpen.set(true);
+			count = 1; // Reset count after adding
+		}
+	}
 </script>
 
 <div>
 	<div class="product-card">
 		<div class="top-card">
-			<!-- We're going to have an image here I guess -->
 			{#if product.image}
 				<img src={product.image} alt={product.name} />
 			{:else}
@@ -23,19 +35,17 @@
 		</div>
 		<div class="bottom-card">
 			<h3>{product.name}</h3>
-			<p class="price">${product.price}</p>
+			<p class="price">${product.price.toFixed(2)}</p>
 			<p class="description">{product.description}</p>
-			<!-- We have detials about the items here. -->
 		</div>
 	</div>
 	<div class="quantity-buy">
-		<!-- We have the quanitty selector and  a buy button-->
 		<div class="change-quantity">
-			<button class="increment" onclick={() => count++}>+</button>
+			<button class="decrement" onclick={() => count > 1 && count--}>-</button>
 			<p class="item-count">{count}</p>
-			<button class="decrement" onclick={() => count--}>-</button>
+			<button class="increment" onclick={() => count++}>+</button>
 		</div>
-		<Button text="Add to Cart" />
+		<button class="add-cart-btn" onclick={addToCart}>Add to Cart</button>
 	</div>
 </div>
 
@@ -43,13 +53,11 @@
 	.product-card {
 		border: 1px solid #ddd;
 		border-radius: 8px;
-		overflow: auto;
-		align-items: center;
-		justify-content: center;
+		overflow: hidden;
 		display: flex;
-		overflow: auto;
 		flex-direction: column;
 	}
+
 	.top-card {
 		background-color: black;
 		height: 200px;
@@ -57,54 +65,96 @@
 		align-items: center;
 		justify-content: center;
 		width: 100%;
-		border-top-left-radius: 10px;
-		border-top-right-radius: 10px;
 	}
+
 	.top-card img {
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
 	}
+
 	.placeholder {
 		color: #999;
 	}
+
 	.bottom-card {
 		background-color: grey;
 		padding: 1rem;
 		color: white;
 		width: 100%;
-		border-bottom-left-radius: 10px;
-		border-bottom-right-radius: 10px;
+		box-sizing: border-box;
 	}
+
+	.bottom-card h3 {
+		margin: 0 0 8px 0;
+		font-size: 1.1rem;
+	}
+
 	.price {
 		font-weight: bold;
-		font-size: 1rem;
+		font-size: 1.2rem;
+		margin: 8px 0;
 	}
+
+	.description {
+		margin: 0;
+		font-size: 0.9rem;
+		opacity: 0.9;
+	}
+
 	button {
 		background-color: orangered;
 		color: white;
+		border: none;
 		border-radius: 8px;
-		padding: 5px;
+		padding: 8px;
+		cursor: pointer;
+		transition: background-color 0.2s;
 	}
-	.increment {
-		border-radius: 16px;
-		padding: 4px;
+
+	button:hover {
+		background-color: #ff4500;
 	}
+
+	.increment,
 	.decrement {
-		border-radius: 16px;
-		padding: 5px;
-	}
-	.quantity-buy {
+		border-radius: 50%;
+		width: 32px;
+		height: 32px;
+		padding: 0;
+		display: flex;
 		align-items: center;
 		justify-content: center;
+		font-size: 1.2rem;
+		font-weight: bold;
+	}
+
+	.quantity-buy {
 		display: flex;
 		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		padding: 10px;
 	}
+
 	.change-quantity {
 		display: flex;
 		flex-direction: row;
-		gap: 10px;
-		padding: 10px;
+		gap: 12px;
 		align-items: center;
+	}
+
+	.item-count {
+		margin: 0;
+		font-weight: 600;
+		min-width: 30px;
+		text-align: center;
+	}
+
+	.add-cart-btn {
+		width: 100%;
+		padding: 12px;
+		font-weight: 600;
+		font-size: 1rem;
 	}
 </style>
