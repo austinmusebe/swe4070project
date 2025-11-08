@@ -1,2 +1,946 @@
-<!-- // Shipping + Payment + Confirmation -->
-<h1>this is the account page.</h1>
+<script>
+	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
+
+	let user = $state({
+		name: 'John Doe',
+		email: 'john.doe@example.com',
+		username: 'johndoe',
+		joinDate: 'January 2024',
+		phone: '+1 (555) 123-4567'
+	});
+
+	let addresses = $state([
+		{
+			id: '1',
+			label: 'Home',
+			street: '123 Main St',
+			city: 'New York',
+			state: 'NY',
+			zip: '10001',
+			country: 'USA',
+			isDefault: true
+		}
+	]);
+
+	let isEditingProfile = $state(false);
+	let isEditingPassword = $state(false);
+	let isAddingAddress = $state(false);
+	let editingAddressId = $state(null);
+
+	let newAddress = $state({
+		label: 'Home',
+		street: '',
+		city: '',
+		state: '',
+		zip: '',
+		country: 'USA'
+	});
+
+	// Map related
+	let map = $state(null);
+	let marker = $state(null);
+	let mapContainer = $state(null);
+
+	function handleLogout() {
+		goto('/login');
+	}
+
+	function startAddingAddress() {
+		isAddingAddress = true;
+		newAddress = {
+			label: 'Home',
+			street: '',
+			city: '',
+			state: '',
+			zip: '',
+			country: 'USA'
+		};
+		setTimeout(initMap, 100);
+	}
+
+	function startEditingAddress(address) {
+		editingAddressId = address.id;
+		newAddress = { ...address };
+		isAddingAddress = true;
+		setTimeout(initMap, 100);
+	}
+
+	function cancelAddressForm() {
+		isAddingAddress = false;
+		editingAddressId = null;
+		newAddress = {
+			label: 'Home',
+			street: '',
+			city: '',
+			state: '',
+			zip: '',
+			country: 'USA'
+		};
+	}
+
+	function saveAddress() {
+		if (!newAddress.street || !newAddress.city) {
+			alert('Please fill in all required fields');
+			return;
+		}
+
+		if (editingAddressId) {
+			// Update existing address
+			addresses = addresses.map((addr) =>
+				addr.id === editingAddressId ? { ...newAddress, id: editingAddressId } : addr
+			);
+		} else {
+			// Add new address
+			const newAddr = {
+				...newAddress,
+				id: Date.now().toString(),
+				isDefault: addresses.length === 0
+			};
+			addresses = [...addresses, newAddr];
+		}
+
+		cancelAddressForm();
+	}
+
+	function deleteAddress(id) {
+		if (confirm('Are you sure you want to delete this address?')) {
+			addresses = addresses.filter((addr) => addr.id !== id);
+		}
+	}
+
+	function setDefaultAddress(id) {
+		addresses = addresses.map((addr) => ({
+			...addr,
+			isDefault: addr.id === id
+		}));
+	}
+
+	async function initMap() {
+		if (!mapContainer) return;
+
+		// Dynamically import Leaflet
+		const L = await import('leaflet');
+		await import('leaflet/dist/leaflet.css');
+
+		// Initialize map
+		if (map) {
+			map.remove();
+		}
+
+		map = L.map(mapContainer).setView([40.7128, -74.006], 13);
+
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: '© OpenStreetMap contributors',
+			maxZoom: 19
+		}).addTo(map);
+
+		// Add marker
+		marker = L.marker([40.7128, -74.006], {
+			draggable: true
+		}).addTo(map);
+
+		// Update address when marker is dragged
+		marker.on('dragend', async function (e) {
+			const position = marker.getLatLng();
+			// Reverse geocoding using Nominatim (OpenStreetMap)
+			try {
+				const response = await fetch(
+					`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}`
+				);
+				const data = await response.json();
+				if (data.address) {
+					newAddress.street = data.address.road || data.address.suburb || '';
+					newAddress.city = data.address.city || data.address.town || data.address.village || '';
+					newAddress.state = data.address.state || '';
+					newAddress.zip = data.address.postcode || '';
+					newAddress.country = data.address.country || 'USA';
+				}
+			} catch (error) {
+				console.error('Geocoding error:', error);
+			}
+		});
+	}
+
+	async function searchAddress() {
+		const query = `${newAddress.street}, ${newAddress.city}, ${newAddress.state}`;
+		if (!query.trim()) return;
+
+		try {
+			const response = await fetch(
+				`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`
+			);
+			const data = await response.json();
+			if (data && data.length > 0) {
+				const L = await import('leaflet');
+				const lat = parseFloat(data[0].lat);
+				const lon = parseFloat(data[0].lon);
+				map.setView([lat, lon], 15);
+				marker.setLatLng([lat, lon]);
+			}
+		} catch (error) {
+			console.error('Search error:', error);
+		}
+	}
+</script>
+
+<div class="account-container">
+	<div class="account-header">
+		<div class="header-content">
+			<div class="user-avatar">
+				<span class="avatar-text"
+					>{user.name
+						.split(' ')
+						.map((n) => n[0])
+						.join('')}</span
+				>
+			</div>
+			<div class="user-info">
+				<h1>{user.name}</h1>
+				<p>@{user.username}</p>
+				<span class="member-since">Member since {user.joinDate}</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="account-content">
+		<div class="sidebar">
+			<nav class="sidebar-nav">
+				<a href="#profile" class="nav-item active">
+					<span class="icon">👤</span>
+					Profile
+				</a>
+				<a href="#orders" class="nav-item">
+					<span class="icon">📦</span>
+					Orders
+				</a>
+				<a href="#addresses" class="nav-item">
+					<span class="icon">📍</span>
+					Addresses
+				</a>
+				<a href="#payment" class="nav-item">
+					<span class="icon">💳</span>
+					Payment Methods
+				</a>
+				<a href="#settings" class="nav-item">
+					<span class="icon">⚙️</span>
+					Settings
+				</a>
+			</nav>
+			<button class="logout-btn" onclick={handleLogout}>
+				<span class="icon">🚪</span>
+				Logout
+			</button>
+		</div>
+
+		<div class="main-content">
+			<!-- Profile Information -->
+			<section class="content-card">
+				<div class="card-header">
+					<h2>Profile Information</h2>
+					<button class="edit-btn" onclick={() => (isEditingProfile = !isEditingProfile)}>
+						{isEditingProfile ? 'Cancel' : 'Edit'}
+					</button>
+				</div>
+				<div class="card-body">
+					<div class="info-grid">
+						<div class="info-item">
+							<label>Full Name</label>
+							{#if isEditingProfile}
+								<input type="text" bind:value={user.name} class="edit-input" />
+							{:else}
+								<p>{user.name}</p>
+							{/if}
+						</div>
+						<div class="info-item">
+							<label>Email</label>
+							{#if isEditingProfile}
+								<input type="email" bind:value={user.email} class="edit-input" />
+							{:else}
+								<p>{user.email}</p>
+							{/if}
+						</div>
+						<div class="info-item">
+							<label>Phone</label>
+							{#if isEditingProfile}
+								<input type="tel" bind:value={user.phone} class="edit-input" />
+							{:else}
+								<p>{user.phone}</p>
+							{/if}
+						</div>
+					</div>
+					{#if isEditingProfile}
+						<div class="action-buttons">
+							<button class="save-btn">Save Changes</button>
+							<button class="cancel-btn" onclick={() => (isEditingProfile = false)}>Cancel</button>
+						</div>
+					{/if}
+				</div>
+			</section>
+
+			<!-- Addresses Section -->
+			<section class="content-card" id="addresses">
+				<div class="card-header">
+					<h2>Saved Addresses</h2>
+					{#if !isAddingAddress}
+						<button class="edit-btn" onclick={startAddingAddress}> + Add Address </button>
+					{/if}
+				</div>
+				<div class="card-body">
+					{#if isAddingAddress}
+						<div class="address-form">
+							<h3>{editingAddressId ? 'Edit Address' : 'Add New Address'}</h3>
+
+							<div class="form-grid">
+								<div class="form-group">
+									<label for="label">Label</label>
+									<select id="label" bind:value={newAddress.label} class="edit-input">
+										<option value="Home">Home</option>
+										<option value="Work">Work</option>
+										<option value="Other">Other</option>
+									</select>
+								</div>
+
+								<div class="form-group full-width">
+									<label for="street">Street Address *</label>
+									<input
+										type="text"
+										id="street"
+										bind:value={newAddress.street}
+										placeholder="123 Main Street"
+										class="edit-input"
+									/>
+								</div>
+
+								<div class="form-group">
+									<label for="city">City *</label>
+									<input
+										type="text"
+										id="city"
+										bind:value={newAddress.city}
+										placeholder="New York"
+										class="edit-input"
+									/>
+								</div>
+
+								<div class="form-group">
+									<label for="state">State</label>
+									<input
+										type="text"
+										id="state"
+										bind:value={newAddress.state}
+										placeholder="NY"
+										class="edit-input"
+									/>
+								</div>
+
+								<div class="form-group">
+									<label for="zip">ZIP Code</label>
+									<input
+										type="text"
+										id="zip"
+										bind:value={newAddress.zip}
+										placeholder="10001"
+										class="edit-input"
+									/>
+								</div>
+
+								<div class="form-group">
+									<label for="country">Country</label>
+									<input
+										type="text"
+										id="country"
+										bind:value={newAddress.country}
+										placeholder="USA"
+										class="edit-input"
+									/>
+								</div>
+							</div>
+
+							<button class="search-map-btn" onclick={searchAddress}> 📍 Find on Map </button>
+
+							<div class="map-container" bind:this={mapContainer}></div>
+							<p class="map-hint">Drag the marker to adjust the location</p>
+
+							<div class="action-buttons">
+								<button class="save-btn" onclick={saveAddress}>
+									{editingAddressId ? 'Update Address' : 'Save Address'}
+								</button>
+								<button class="cancel-btn" onclick={cancelAddressForm}>Cancel</button>
+							</div>
+						</div>
+					{:else}
+						<div class="addresses-list">
+							{#each addresses as address}
+								<div class="address-item">
+									<div class="address-content">
+										<div class="address-header-row">
+											<h4>{address.label}</h4>
+											{#if address.isDefault}
+												<span class="default-badge">Default</span>
+											{/if}
+										</div>
+										<p class="address-text">
+											{address.street}<br />
+											{address.city}, {address.state}
+											{address.zip}<br />
+											{address.country}
+										</p>
+									</div>
+									<div class="address-actions">
+										<button class="action-link" onclick={() => startEditingAddress(address)}>
+											Edit
+										</button>
+										{#if !address.isDefault}
+											<button class="action-link" onclick={() => setDefaultAddress(address.id)}>
+												Set as Default
+											</button>
+										{/if}
+										<button class="action-link delete" onclick={() => deleteAddress(address.id)}>
+											Delete
+										</button>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</section>
+
+			<!-- Security -->
+			<section class="content-card">
+				<div class="card-header">
+					<h2>Security</h2>
+					<button class="edit-btn" onclick={() => (isEditingPassword = !isEditingPassword)}>
+						Change Password
+					</button>
+				</div>
+				{#if isEditingPassword}
+					<div class="card-body">
+						<div class="info-grid">
+							<div class="info-item">
+								<label>Current Password</label>
+								<input type="password" placeholder="Enter current password" class="edit-input" />
+							</div>
+							<div class="info-item">
+								<label>New Password</label>
+								<input type="password" placeholder="Enter new password" class="edit-input" />
+							</div>
+							<div class="info-item">
+								<label>Confirm New Password</label>
+								<input type="password" placeholder="Confirm new password" class="edit-input" />
+							</div>
+						</div>
+						<div class="action-buttons">
+							<button class="save-btn">Update Password</button>
+							<button class="cancel-btn" onclick={() => (isEditingPassword = false)}>Cancel</button>
+						</div>
+					</div>
+				{:else}
+					<div class="card-body">
+						<p class="security-info">••••••••</p>
+						<p class="hint">Last changed 3 months ago</p>
+					</div>
+				{/if}
+			</section>
+		</div>
+	</div>
+</div>
+
+<style>
+	:global(body) {
+		margin: 0;
+		padding: 0;
+		background-color: #f5f5f5;
+	}
+
+	.account-container {
+		min-height: 100vh;
+		background-color: #f5f5f5;
+	}
+
+	.account-header {
+		background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+		color: white;
+		padding: 60px 40px;
+		position: relative;
+	}
+
+	.account-header::before {
+		content: '';
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background:
+			radial-gradient(circle at 20% 50%, rgba(255, 107, 107, 0.1) 0%, transparent 50%),
+			radial-gradient(circle at 80% 80%, rgba(255, 193, 7, 0.1) 0%, transparent 50%);
+	}
+
+	.header-content {
+		max-width: 1200px;
+		margin: 0 auto;
+		display: flex;
+		align-items: center;
+		gap: 24px;
+		position: relative;
+		z-index: 1;
+	}
+
+	.user-avatar {
+		width: 100px;
+		height: 100px;
+		background-color: #ff6b6b;
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 2.5rem;
+		font-weight: 700;
+		color: white;
+	}
+
+	.user-info h1 {
+		margin: 0 0 8px 0;
+		font-size: 2rem;
+		font-weight: 600;
+	}
+
+	.user-info p {
+		margin: 0 0 8px 0;
+		color: #ccc;
+		font-size: 1.1rem;
+	}
+
+	.member-since {
+		font-size: 0.9rem;
+		color: #999;
+	}
+
+	.account-content {
+		max-width: 1200px;
+		margin: -40px auto 40px auto;
+		padding: 0 40px;
+		display: flex;
+		gap: 30px;
+		position: relative;
+		z-index: 2;
+	}
+
+	.sidebar {
+		flex: 0 0 250px;
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.sidebar-nav {
+		background-color: white;
+		border-radius: 12px;
+		padding: 12px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+	}
+
+	.nav-item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 14px 16px;
+		color: #666;
+		text-decoration: none;
+		border-radius: 8px;
+		transition: all 0.2s;
+		font-weight: 500;
+	}
+
+	.nav-item:hover {
+		background-color: #f5f5f5;
+		color: #1a1a1a;
+	}
+
+	.nav-item.active {
+		background-color: #ff6b6b;
+		color: white;
+	}
+
+	.icon {
+		font-size: 1.2rem;
+	}
+
+	.logout-btn {
+		width: 100%;
+		background-color: white;
+		border: 2px solid #ff6b6b;
+		color: #ff6b6b;
+		padding: 14px 16px;
+		border-radius: 12px;
+		font-weight: 600;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		transition: all 0.2s;
+	}
+
+	.logout-btn:hover {
+		background-color: #ff6b6b;
+		color: white;
+	}
+
+	.main-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.content-card {
+		background-color: white;
+		border-radius: 12px;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+		overflow: hidden;
+	}
+
+	.card-header {
+		padding: 24px 30px;
+		border-bottom: 1px solid #e0e0e0;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	.card-header h2 {
+		margin: 0;
+		font-size: 1.5rem;
+		color: #1a1a1a;
+		font-weight: 600;
+	}
+
+	.edit-btn {
+		color: #ff6b6b;
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-weight: 600;
+		transition: color 0.2s;
+	}
+
+	.edit-btn:hover {
+		color: #ff5252;
+	}
+
+	.card-body {
+		padding: 30px;
+	}
+
+	.info-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+		gap: 24px;
+	}
+
+	.info-item label {
+		display: block;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #666;
+		margin-bottom: 8px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.info-item p {
+		margin: 0;
+		color: #1a1a1a;
+		font-size: 1rem;
+	}
+
+	.edit-input {
+		width: 100%;
+		padding: 12px 14px;
+		background-color: #f8f8f8;
+		border: 2px solid transparent;
+		border-radius: 8px;
+		font-size: 1rem;
+		transition: all 0.2s;
+		box-sizing: border-box;
+	}
+
+	.edit-input:focus {
+		outline: none;
+		background-color: white;
+		border-color: #ff6b6b;
+	}
+
+	.action-buttons {
+		margin-top: 24px;
+		display: flex;
+		gap: 12px;
+	}
+
+	.save-btn {
+		background-color: #ff6b6b;
+		color: white;
+		border: none;
+		padding: 12px 24px;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.save-btn:hover {
+		background-color: #ff5252;
+	}
+
+	.cancel-btn {
+		background-color: white;
+		color: #666;
+		border: 2px solid #e0e0e0;
+		padding: 12px 24px;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.cancel-btn:hover {
+		border-color: #ccc;
+		color: #333;
+	}
+
+	.security-info {
+		font-size: 1.5rem;
+		letter-spacing: 4px;
+		color: #1a1a1a;
+		margin: 0 0 8px 0;
+	}
+
+	.hint {
+		color: #999;
+		font-size: 0.9rem;
+		margin: 0;
+	}
+
+	/* Address Styles */
+	.address-form {
+		background-color: #f8f8f8;
+		padding: 24px;
+		border-radius: 12px;
+	}
+
+	.address-form h3 {
+		margin: 0 0 20px 0;
+		color: #1a1a1a;
+		font-size: 1.2rem;
+	}
+
+	.form-grid {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 16px;
+		margin-bottom: 20px;
+	}
+
+	.form-group {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.form-group.full-width {
+		grid-column: 1 / -1;
+	}
+
+	.form-group label {
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: #666;
+		margin-bottom: 6px;
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+	}
+
+	.map-container {
+		width: 100%;
+		height: 300px;
+		border-radius: 8px;
+		margin: 16px 0;
+		border: 2px solid #e0e0e0;
+	}
+
+	.map-hint {
+		text-align: center;
+		color: #999;
+		font-size: 0.9rem;
+		margin: 8px 0 20px 0;
+	}
+
+	.search-map-btn {
+		width: 100%;
+		background-color: #1a1a1a;
+		color: white;
+		border: none;
+		padding: 12px;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.2s;
+		margin-bottom: 16px;
+	}
+
+	.search-map-btn:hover {
+		background-color: #333;
+	}
+
+	.addresses-list {
+		display: flex;
+		flex-direction: column;
+		gap: 16px;
+	}
+
+	.address-item {
+		background-color: #f8f8f8;
+		padding: 20px;
+		border-radius: 12px;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 20px;
+	}
+
+	.address-content {
+		flex: 1;
+	}
+
+	.address-header-row {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		margin-bottom: 8px;
+	}
+
+	.address-item h4 {
+		margin: 0;
+		color: #1a1a1a;
+		font-size: 1.1rem;
+		font-weight: 600;
+	}
+
+	.default-badge {
+		background-color: #ff6b6b;
+		color: white;
+		padding: 4px 12px;
+		border-radius: 12px;
+		font-size: 0.75rem;
+		font-weight: 600;
+	}
+
+	.address-text {
+		margin: 0;
+		color: #666;
+		line-height: 1.6;
+	}
+
+	.address-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		align-items: flex-end;
+	}
+
+	.action-link {
+		background: none;
+		border: none;
+		color: #ff6b6b;
+		font-weight: 600;
+		cursor: pointer;
+		padding: 4px 8px;
+		transition: color 0.2s;
+	}
+
+	.action-link:hover {
+		color: #ff5252;
+	}
+
+	.action-link.delete {
+		color: #999;
+	}
+
+	.action-link.delete:hover {
+		color: #e74c3c;
+	}
+
+	@media (max-width: 968px) {
+		.account-content {
+			flex-direction: column;
+		}
+
+		.sidebar {
+			flex: 1;
+		}
+
+		.sidebar-nav {
+			display: flex;
+			overflow-x: auto;
+			gap: 8px;
+		}
+
+		.nav-item {
+			white-space: nowrap;
+		}
+
+		.account-header {
+			padding: 40px 30px;
+		}
+
+		.account-content {
+			padding: 0 30px;
+		}
+
+		.form-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.address-item {
+			flex-direction: column;
+		}
+
+		.address-actions {
+			width: 100%;
+			flex-direction: row;
+			justify-content: flex-start;
+		}
+	}
+
+	@media (max-width: 568px) {
+		.header-content {
+			flex-direction: column;
+			text-align: center;
+		}
+
+		.user-avatar {
+			width: 80px;
+			height: 80px;
+			font-size: 2rem;
+		}
+
+		.user-info h1 {
+			font-size: 1.5rem;
+		}
+
+		.info-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.action-buttons {
+			flex-direction: column;
+		}
+
+		.save-btn,
+		.cancel-btn {
+			width: 100%;
+		}
+	}
+</style>
