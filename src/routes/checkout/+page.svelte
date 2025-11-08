@@ -1,15 +1,53 @@
 <script>
 	import { cart } from '../../stores/cart';
+	import { currentUser } from '../../stores/user';
+	import { addresses, defaultAddress } from '../../stores/addresses.js';
 	import { goto } from '$app/navigation';
 
+	let user = $state(null);
 	let cartItems = $state([]);
+	let userAddresses = $state([]);
+	let selectedDefaultAddress = $state(null);
 	let total = $derived(cart.getTotal(cartItems));
+
+	$effect(() => {
+		currentUser.subscribe((u) => {
+			user = u;
+			if (!u) {
+				goto('/login');
+			}
+		});
+	});
 
 	$effect(() => {
 		cart.subscribe((items) => {
 			cartItems = items;
 			if (items.length === 0) {
 				goto('/home');
+			}
+		});
+	});
+
+	$effect(() => {
+		addresses.subscribe((addrs) => {
+			userAddresses = addrs;
+		});
+	});
+
+	$effect(() => {
+		defaultAddress.subscribe((addr) => {
+			selectedDefaultAddress = addr;
+			if (addr) {
+				// Pre-fill shipping info from default address
+				shippingInfo.fullName = user?.name || '';
+				shippingInfo.email = user?.email || '';
+				shippingInfo.phone = user?.phone || '';
+				shippingInfo.street = addr.street;
+				shippingInfo.city = addr.city;
+				shippingInfo.state = addr.state;
+				shippingInfo.zip = addr.zip;
+				shippingInfo.country = addr.country;
+				selectedAddressId = addr.id;
 			}
 		});
 	});
@@ -26,6 +64,9 @@
 		country: 'USA'
 	});
 
+	let selectedAddressId = $state(null);
+	let useNewAddress = $state(false);
+
 	// Payment Information
 	let paymentInfo = $state({
 		cardNumber: '',
@@ -36,6 +77,34 @@
 
 	let currentStep = $state(1); // 1: Shipping, 2: Payment, 3: Review
 	let agreeToTerms = $state(false);
+
+	function selectSavedAddress(address) {
+		selectedAddressId = address.id;
+		useNewAddress = false;
+		shippingInfo.fullName = user?.name || '';
+		shippingInfo.email = user?.email || '';
+		shippingInfo.phone = user?.phone || '';
+		shippingInfo.street = address.street;
+		shippingInfo.city = address.city;
+		shippingInfo.state = address.state;
+		shippingInfo.zip = address.zip;
+		shippingInfo.country = address.country;
+	}
+
+	function useNewAddressOption() {
+		useNewAddress = true;
+		selectedAddressId = null;
+		shippingInfo = {
+			fullName: user?.name || '',
+			email: user?.email || '',
+			phone: user?.phone || '',
+			street: '',
+			city: '',
+			state: '',
+			zip: '',
+			country: 'USA'
+		};
+	}
 
 	function nextStep() {
 		if (currentStep === 1) {
@@ -88,6 +157,24 @@
 		}
 
 		// Simulate order processing
+		const orderData = {
+			orderId: `ORD-${Date.now()}`,
+			userId: user?.id,
+			items: cartItems,
+			shipping: shippingInfo,
+			payment: {
+				last4: paymentInfo.cardNumber.slice(-4),
+				cardName: paymentInfo.cardName
+			},
+			total: (total + 5 + total * 0.08).toFixed(2),
+			date: new Date().toISOString()
+		};
+
+		// Save order to localStorage (you can replace this with API call)
+		const orders = JSON.parse(localStorage.getItem(`orders_${user?.id}`) || '[]');
+		orders.push(orderData);
+		localStorage.setItem(`orders_${user?.id}`, JSON.stringify(orders));
+
 		alert('Order placed successfully! 🎉');
 		cart.clear();
 		goto('/account');
@@ -143,93 +230,161 @@
 			{#if currentStep === 1}
 				<div class="checkout-section">
 					<h2>Shipping Information</h2>
-					<div class="form-grid">
-						<div class="form-group full-width">
-							<label for="fullName">Full Name *</label>
-							<input
-								type="text"
-								id="fullName"
-								bind:value={shippingInfo.fullName}
-								placeholder="John Doe"
-								class="input-field"
-							/>
-						</div>
 
-						<div class="form-group">
-							<label for="email">Email *</label>
-							<input
-								type="email"
-								id="email"
-								bind:value={shippingInfo.email}
-								placeholder="john@example.com"
-								class="input-field"
-							/>
-						</div>
+					<!-- Saved Addresses -->
+					{#if userAddresses.length > 0}
+						<div class="saved-addresses-section">
+							<h3>Select a saved address</h3>
+							<div class="saved-addresses-grid">
+								{#each userAddresses as address}
+									<div
+										class="saved-address-card"
+										class:selected={selectedAddressId === address.id && !useNewAddress}
+										onclick={() => selectSavedAddress(address)}
+									>
+										<div class="address-radio">
+											{#if selectedAddressId === address.id && !useNewAddress}
+												<span class="radio-checked">●</span>
+											{:else}
+												<span class="radio-unchecked">○</span>
+											{/if}
+										</div>
+										<div class="address-info">
+											<div class="address-label-row">
+												<strong>{address.label}</strong>
+												{#if address.isDefault}
+													<span class="mini-badge">Default</span>
+												{/if}
+											</div>
+											<p class="address-compact">
+												{address.street}, {address.city}, {address.state}
+												{address.zip}
+											</p>
+										</div>
+									</div>
+								{/each}
 
-						<div class="form-group">
-							<label for="phone">Phone *</label>
-							<input
-								type="tel"
-								id="phone"
-								bind:value={shippingInfo.phone}
-								placeholder="+1 (555) 123-4567"
-								class="input-field"
-							/>
+								<!-- Add New Address Option -->
+								<div
+									class="saved-address-card new-address-option"
+									class:selected={useNewAddress}
+									onclick={useNewAddressOption}
+								>
+									<div class="address-radio">
+										{#if useNewAddress}
+											<span class="radio-checked">●</span>
+										{:else}
+											<span class="radio-unchecked">○</span>
+										{/if}
+									</div>
+									<div class="address-info">
+										<strong>+ Use a different address</strong>
+										<p class="address-compact">Enter a new shipping address</p>
+									</div>
+								</div>
+							</div>
 						</div>
+					{/if}
 
-						<div class="form-group full-width">
-							<label for="street">Street Address *</label>
-							<input
-								type="text"
-								id="street"
-								bind:value={shippingInfo.street}
-								placeholder="123 Main Street"
-								class="input-field"
-							/>
-						</div>
+					<!-- Shipping Form -->
+					<div class="shipping-form-section">
+						{#if userAddresses.length > 0}
+							<h3>{useNewAddress ? 'New Shipping Address' : 'Confirm Details'}</h3>
+						{/if}
 
-						<div class="form-group">
-							<label for="city">City *</label>
-							<input
-								type="text"
-								id="city"
-								bind:value={shippingInfo.city}
-								placeholder="New York"
-								class="input-field"
-							/>
-						</div>
+						<div class="form-grid">
+							<div class="form-group full-width">
+								<label for="fullName">Full Name *</label>
+								<input
+									type="text"
+									id="fullName"
+									bind:value={shippingInfo.fullName}
+									placeholder="John Doe"
+									class="input-field"
+								/>
+							</div>
 
-						<div class="form-group">
-							<label for="state">State</label>
-							<input
-								type="text"
-								id="state"
-								bind:value={shippingInfo.state}
-								placeholder="NY"
-								class="input-field"
-							/>
-						</div>
+							<div class="form-group">
+								<label for="email">Email *</label>
+								<input
+									type="email"
+									id="email"
+									bind:value={shippingInfo.email}
+									placeholder="john@example.com"
+									class="input-field"
+								/>
+							</div>
 
-						<div class="form-group">
-							<label for="zip">ZIP Code *</label>
-							<input
-								type="text"
-								id="zip"
-								bind:value={shippingInfo.zip}
-								placeholder="10001"
-								class="input-field"
-							/>
-						</div>
+							<div class="form-group">
+								<label for="phone">Phone *</label>
+								<input
+									type="tel"
+									id="phone"
+									bind:value={shippingInfo.phone}
+									placeholder="+1 (555) 123-4567"
+									class="input-field"
+								/>
+							</div>
 
-						<div class="form-group">
-							<label for="country">Country</label>
-							<input
-								type="text"
-								id="country"
-								bind:value={shippingInfo.country}
-								placeholder="USA"
-								class="input-field"
-							/>
+							<div class="form-group full-width">
+								<label for="street">Street Address *</label>
+								<input
+									type="text"
+									id="street"
+									bind:value={shippingInfo.street}
+									placeholder="123 Main Street"
+									class="input-field"
+									disabled={selectedAddressId && !useNewAddress}
+								/>
+							</div>
+
+							<div class="form-group">
+								<label for="city">City *</label>
+								<input
+									type="text"
+									id="city"
+									bind:value={shippingInfo.city}
+									placeholder="New York"
+									class="input-field"
+									disabled={selectedAddressId && !useNewAddress}
+								/>
+							</div>
+
+							<div class="form-group">
+								<label for="state">State</label>
+								<input
+									type="text"
+									id="state"
+									bind:value={shippingInfo.state}
+									placeholder="NY"
+									class="input-field"
+									disabled={selectedAddressId && !useNewAddress}
+								/>
+							</div>
+
+							<div class="form-group">
+								<label for="zip">ZIP Code *</label>
+								<input
+									type="text"
+									id="zip"
+									bind:value={shippingInfo.zip}
+									placeholder="10001"
+									class="input-field"
+									disabled={selectedAddressId && !useNewAddress}
+								/>
+							</div>
+
+							<div class="form-group">
+								<label for="country">Country</label>
+								<input
+									type="text"
+									id="country"
+									bind:value={shippingInfo.country}
+									placeholder="USA"
+									class="input-field"
+									disabled={selectedAddressId && !useNewAddress}
+								/>
+							</div>
 						</div>
 					</div>
 

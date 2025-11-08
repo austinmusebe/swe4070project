@@ -1,8 +1,28 @@
 <script>
 	import Button from '../../components/Button.svelte';
+	import { currentUser } from '../../stores/user.js';
+	import { goto } from '$app/navigation';
 
-	let username = $state('');
+	let email = $state('');
 	let password = $state('');
+	let errorMessage = $state('');
+
+	function handleLogin() {
+		errorMessage = '';
+
+		if (!email || !password) {
+			errorMessage = 'Please fill in all fields';
+			return;
+		}
+
+		const result = currentUser.login(email, password);
+
+		if (result.success) {
+			goto('/home');
+		} else {
+			errorMessage = result.error;
+		}
+	}
 </script>
 
 <div class="container">
@@ -15,14 +35,25 @@
 				<h1>Welcome Back</h1>
 				<p>Don't have an account? <a href="/register">Sign up</a></p>
 
-				<form>
+				{#if errorMessage}
+					<div class="error-message">
+						{errorMessage}
+					</div>
+				{/if}
+
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleLogin();
+					}}
+				>
 					<div class="input-group">
-						<label for="username">Username</label>
+						<label for="email">Email</label>
 						<input
-							type="text"
-							id="username"
-							bind:value={username}
-							placeholder="Enter your username"
+							type="email"
+							id="email"
+							bind:value={email}
+							placeholder="Enter your email"
 							class="user-pass"
 						/>
 					</div>
@@ -41,7 +72,7 @@
 					<a href="/forgot-password" class="forgot-link">Forgot password?</a>
 
 					<div class="button-container">
-						<Button text="Log In" />
+						<button type="submit" class="login-btn">Log In</button>
 					</div>
 				</form>
 			</div>
@@ -131,7 +162,7 @@
 	p {
 		font-size: 0.95rem;
 		color: #666;
-		margin: 0 0 32px 0;
+		margin: 0 0 24px 0;
 	}
 
 	a {
@@ -147,6 +178,16 @@
 
 	form {
 		width: 100%;
+	}
+
+	.error-message {
+		background-color: #fee;
+		color: #c33;
+		padding: 12px;
+		border-radius: 8px;
+		margin-bottom: 20px;
+		font-size: 0.9rem;
+		border: 1px solid #fcc;
 	}
 
 	.input-group {
@@ -198,7 +239,23 @@
 		margin-top: 24px;
 	}
 
-	/* Responsive */
+	.login-btn {
+		width: 100%;
+		background-color: #ff6b6b;
+		color: white;
+		border: none;
+		padding: 16px;
+		border-radius: 10px;
+		font-size: 1.1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.2s;
+	}
+
+	.login-btn:hover {
+		background-color: #ff5252;
+	}
+
 	@media (max-width: 768px) {
 		.login-section {
 			flex-direction: column;

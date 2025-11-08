@@ -1,5 +1,7 @@
 <script>
 	import Button from '../../components/Button.svelte';
+	import { currentUser } from '../../stores/user.js';
+	import { goto } from '$app/navigation';
 
 	let firstName = $state('');
 	let lastName = $state('');
@@ -7,6 +9,50 @@
 	let username = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
+	let agreeToTerms = $state(false);
+	let errorMessage = $state('');
+
+	function handleRegister() {
+		errorMessage = '';
+
+		// Validation
+		if (!firstName || !lastName || !email || !username || !password || !confirmPassword) {
+			errorMessage = 'Please fill in all fields';
+			return;
+		}
+
+		if (password !== confirmPassword) {
+			errorMessage = 'Passwords do not match';
+			return;
+		}
+
+		if (password.length < 6) {
+			errorMessage = 'Password must be at least 6 characters';
+			return;
+		}
+
+		if (!agreeToTerms) {
+			errorMessage = 'Please agree to the Terms & Conditions';
+			return;
+		}
+
+		// Register user
+		const result = currentUser.register({
+			firstName,
+			lastName,
+			name: `${firstName} ${lastName}`,
+			email,
+			username,
+			password,
+			phone: ''
+		});
+
+		if (result.success) {
+			goto('/home');
+		} else {
+			errorMessage = result.error;
+		}
+	}
 </script>
 
 <div class="container">
@@ -36,7 +82,18 @@
 				<h1>Create Account</h1>
 				<p>Already have an account? <a href="/login">Sign in</a></p>
 
-				<form>
+				{#if errorMessage}
+					<div class="error-message">
+						{errorMessage}
+					</div>
+				{/if}
+
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleRegister();
+					}}
+				>
 					<div class="name-section">
 						<div class="input-group">
 							<label for="firstName">First Name</label>
@@ -84,8 +141,15 @@
 						/>
 					</div>
 
+					<div class="checkbox-group">
+						<input type="checkbox" id="terms" bind:checked={agreeToTerms} />
+						<label for="terms" class="checkbox-label">
+							I agree to the <a href="/terms">Terms & Conditions</a>
+						</label>
+					</div>
+
 					<div class="button-container">
-						<Button text="Create Account" />
+						<button type="submit" class="register-btn">Create Account</button>
 					</div>
 				</form>
 			</div>
@@ -213,7 +277,7 @@
 	p {
 		font-size: 0.95rem;
 		color: #666;
-		margin: 0 0 32px 0;
+		margin: 0 0 24px 0;
 	}
 
 	a {
@@ -229,6 +293,16 @@
 
 	form {
 		width: 100%;
+	}
+
+	.error-message {
+		background-color: #fee;
+		color: #c33;
+		padding: 12px;
+		border-radius: 8px;
+		margin-bottom: 20px;
+		font-size: 0.9rem;
+		border: 1px solid #fcc;
 	}
 
 	.name-section {
@@ -286,11 +360,48 @@
 		color: #999;
 	}
 
+	.checkbox-group {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 24px;
+	}
+
+	input[type='checkbox'] {
+		width: 18px;
+		height: 18px;
+		cursor: pointer;
+		accent-color: #ff6b6b;
+	}
+
+	.checkbox-label {
+		font-size: 0.9rem;
+		color: #666;
+		margin: 0;
+		cursor: pointer;
+	}
+
 	.button-container {
 		margin-top: 24px;
 	}
 
-	/* Responsive */
+	.register-btn {
+		width: 100%;
+		background-color: #ff6b6b;
+		color: white;
+		border: none;
+		padding: 16px;
+		border-radius: 10px;
+		font-size: 1.1rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.2s;
+	}
+
+	.register-btn:hover {
+		background-color: #ff5252;
+	}
+
 	@media (max-width: 968px) {
 		.register-section {
 			flex-direction: column;

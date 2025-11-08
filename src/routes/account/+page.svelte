@@ -1,32 +1,37 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { currentUser } from '../../stores/user.js';
+	import { addresses } from '../../stores/addresses.js';
 
-	let user = $state({
-		name: 'John Doe',
-		email: 'john.doe@example.com',
-		username: 'johndoe',
-		joinDate: 'January 2024',
-		phone: '+1 (555) 123-4567'
+	let user = $state(null);
+	let userAddresses = $state([]);
+
+	$effect(() => {
+		currentUser.subscribe((u) => {
+			user = u;
+			if (!u) {
+				goto('/login');
+			}
+		});
 	});
 
-	let addresses = $state([
-		{
-			id: '1',
-			label: 'Home',
-			street: '123 Main St',
-			city: 'New York',
-			state: 'NY',
-			zip: '10001',
-			country: 'USA',
-			isDefault: true
-		}
-	]);
+	$effect(() => {
+		addresses.subscribe((addrs) => {
+			userAddresses = addrs;
+		});
+	});
 
 	let isEditingProfile = $state(false);
 	let isEditingPassword = $state(false);
 	let isAddingAddress = $state(false);
 	let editingAddressId = $state(null);
+
+	let profileForm = $state({
+		name: '',
+		email: '',
+		phone: ''
+	});
 
 	let newAddress = $state({
 		label: 'Home',
@@ -42,12 +47,31 @@
 	let marker = $state(null);
 	let mapContainer = $state(null);
 
+	$effect(() => {
+		if (user) {
+			profileForm = {
+				name: user.name || '',
+				email: user.email || '',
+				phone: user.phone || ''
+			};
+		}
+	});
+
 	function handleLogout() {
+		currentUser.logout();
 		goto('/login');
+	}
+
+	function saveProfile() {
+		if (user) {
+			currentUser.updateProfile(profileForm);
+			isEditingProfile = false;
+		}
 	}
 
 	function startAddingAddress() {
 		isAddingAddress = true;
+		editingAddressId = null;
 		newAddress = {
 			label: 'Home',
 			street: '',
@@ -85,35 +109,29 @@
 			return;
 		}
 
+		if (!user) return;
+
 		if (editingAddressId) {
 			// Update existing address
-			addresses = addresses.map((addr) =>
-				addr.id === editingAddressId ? { ...newAddress, id: editingAddressId } : addr
-			);
+			addresses.update(editingAddressId, newAddress, user.id);
 		} else {
 			// Add new address
-			const newAddr = {
-				...newAddress,
-				id: Date.now().toString(),
-				isDefault: addresses.length === 0
-			};
-			addresses = [...addresses, newAddr];
+			addresses.add(newAddress, user.id);
 		}
 
 		cancelAddressForm();
 	}
 
 	function deleteAddress(id) {
+		if (!user) return;
 		if (confirm('Are you sure you want to delete this address?')) {
-			addresses = addresses.filter((addr) => addr.id !== id);
+			addresses.delete(id, user.id);
 		}
 	}
 
 	function setDefaultAddress(id) {
-		addresses = addresses.map((addr) => ({
-			...addr,
-			isDefault: addr.id === id
-		}));
+		if (!user) return;
+		addresses.setDefault(id, user.id);
 	}
 
 	async function initMap() {
@@ -184,268 +202,281 @@
 	}
 </script>
 
-<div class="account-container">
-	<div class="account-header">
-		<div class="header-content">
-			<div class="user-avatar">
-				<span class="avatar-text"
-					>{user.name
-						.split(' ')
-						.map((n) => n[0])
-						.join('')}</span
-				>
-			</div>
-			<div class="user-info">
-				<h1>{user.name}</h1>
-				<p>@{user.username}</p>
-				<span class="member-since">Member since {user.joinDate}</span>
-			</div>
-		</div>
-	</div>
-
-	<div class="account-content">
-		<div class="sidebar">
-			<nav class="sidebar-nav">
-				<a href="#profile" class="nav-item active">
-					<span class="icon">👤</span>
-					Profile
-				</a>
-				<a href="#orders" class="nav-item">
-					<span class="icon">📦</span>
-					Orders
-				</a>
-				<a href="#addresses" class="nav-item">
-					<span class="icon">📍</span>
-					Addresses
-				</a>
-				<a href="#payment" class="nav-item">
-					<span class="icon">💳</span>
-					Payment Methods
-				</a>
-				<a href="#settings" class="nav-item">
-					<span class="icon">⚙️</span>
-					Settings
-				</a>
-			</nav>
-			<button class="logout-btn" onclick={handleLogout}>
-				<span class="icon">🚪</span>
-				Logout
-			</button>
-		</div>
-
-		<div class="main-content">
-			<!-- Profile Information -->
-			<section class="content-card">
-				<div class="card-header">
-					<h2>Profile Information</h2>
-					<button class="edit-btn" onclick={() => (isEditingProfile = !isEditingProfile)}>
-						{isEditingProfile ? 'Cancel' : 'Edit'}
-					</button>
+{#if user}
+	<div class="account-container">
+		<div class="account-header">
+			<div class="header-content">
+				<div class="user-avatar">
+					<span class="avatar-text"
+						>{user.name
+							.split(' ')
+							.map((n) => n[0])
+							.join('')}</span
+					>
 				</div>
-				<div class="card-body">
-					<div class="info-grid">
-						<div class="info-item">
-							<label>Full Name</label>
-							{#if isEditingProfile}
-								<input type="text" bind:value={user.name} class="edit-input" />
-							{:else}
-								<p>{user.name}</p>
-							{/if}
-						</div>
-						<div class="info-item">
-							<label>Email</label>
-							{#if isEditingProfile}
-								<input type="email" bind:value={user.email} class="edit-input" />
-							{:else}
-								<p>{user.email}</p>
-							{/if}
-						</div>
-						<div class="info-item">
-							<label>Phone</label>
-							{#if isEditingProfile}
-								<input type="tel" bind:value={user.phone} class="edit-input" />
-							{:else}
-								<p>{user.phone}</p>
-							{/if}
-						</div>
+				<div class="user-info">
+					<h1>{user.name}</h1>
+					<p>@{user.username}</p>
+					<span class="member-since">Member since {user.joinDate}</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="account-content">
+			<div class="sidebar">
+				<nav class="sidebar-nav">
+					<a href="#profile" class="nav-item active">
+						<span class="icon">👤</span>
+						Profile
+					</a>
+					<a href="#orders" class="nav-item">
+						<span class="icon">📦</span>
+						Orders
+					</a>
+					<a href="#addresses" class="nav-item">
+						<span class="icon">📍</span>
+						Addresses
+					</a>
+					<a href="#payment" class="nav-item">
+						<span class="icon">💳</span>
+						Payment Methods
+					</a>
+					<a href="#settings" class="nav-item">
+						<span class="icon">⚙️</span>
+						Settings
+					</a>
+				</nav>
+				<button class="logout-btn" onclick={handleLogout}>
+					<span class="icon">🚪</span>
+					Logout
+				</button>
+			</div>
+
+			<div class="main-content">
+				<!-- Profile Information -->
+				<section class="content-card">
+					<div class="card-header">
+						<h2>Profile Information</h2>
+						<button class="edit-btn" onclick={() => (isEditingProfile = !isEditingProfile)}>
+							{isEditingProfile ? 'Cancel' : 'Edit'}
+						</button>
 					</div>
-					{#if isEditingProfile}
-						<div class="action-buttons">
-							<button class="save-btn">Save Changes</button>
-							<button class="cancel-btn" onclick={() => (isEditingProfile = false)}>Cancel</button>
-						</div>
-					{/if}
-				</div>
-			</section>
-
-			<!-- Addresses Section -->
-			<section class="content-card" id="addresses">
-				<div class="card-header">
-					<h2>Saved Addresses</h2>
-					{#if !isAddingAddress}
-						<button class="edit-btn" onclick={startAddingAddress}> + Add Address </button>
-					{/if}
-				</div>
-				<div class="card-body">
-					{#if isAddingAddress}
-						<div class="address-form">
-							<h3>{editingAddressId ? 'Edit Address' : 'Add New Address'}</h3>
-
-							<div class="form-grid">
-								<div class="form-group">
-									<label for="label">Label</label>
-									<select id="label" bind:value={newAddress.label} class="edit-input">
-										<option value="Home">Home</option>
-										<option value="Work">Work</option>
-										<option value="Other">Other</option>
-									</select>
-								</div>
-
-								<div class="form-group full-width">
-									<label for="street">Street Address *</label>
-									<input
-										type="text"
-										id="street"
-										bind:value={newAddress.street}
-										placeholder="123 Main Street"
-										class="edit-input"
-									/>
-								</div>
-
-								<div class="form-group">
-									<label for="city">City *</label>
-									<input
-										type="text"
-										id="city"
-										bind:value={newAddress.city}
-										placeholder="New York"
-										class="edit-input"
-									/>
-								</div>
-
-								<div class="form-group">
-									<label for="state">State</label>
-									<input
-										type="text"
-										id="state"
-										bind:value={newAddress.state}
-										placeholder="NY"
-										class="edit-input"
-									/>
-								</div>
-
-								<div class="form-group">
-									<label for="zip">ZIP Code</label>
-									<input
-										type="text"
-										id="zip"
-										bind:value={newAddress.zip}
-										placeholder="10001"
-										class="edit-input"
-									/>
-								</div>
-
-								<div class="form-group">
-									<label for="country">Country</label>
-									<input
-										type="text"
-										id="country"
-										bind:value={newAddress.country}
-										placeholder="USA"
-										class="edit-input"
-									/>
-								</div>
-							</div>
-
-							<button class="search-map-btn" onclick={searchAddress}> 📍 Find on Map </button>
-
-							<div class="map-container" bind:this={mapContainer}></div>
-							<p class="map-hint">Drag the marker to adjust the location</p>
-
-							<div class="action-buttons">
-								<button class="save-btn" onclick={saveAddress}>
-									{editingAddressId ? 'Update Address' : 'Save Address'}
-								</button>
-								<button class="cancel-btn" onclick={cancelAddressForm}>Cancel</button>
-							</div>
-						</div>
-					{:else}
-						<div class="addresses-list">
-							{#each addresses as address}
-								<div class="address-item">
-									<div class="address-content">
-										<div class="address-header-row">
-											<h4>{address.label}</h4>
-											{#if address.isDefault}
-												<span class="default-badge">Default</span>
-											{/if}
-										</div>
-										<p class="address-text">
-											{address.street}<br />
-											{address.city}, {address.state}
-											{address.zip}<br />
-											{address.country}
-										</p>
-									</div>
-									<div class="address-actions">
-										<button class="action-link" onclick={() => startEditingAddress(address)}>
-											Edit
-										</button>
-										{#if !address.isDefault}
-											<button class="action-link" onclick={() => setDefaultAddress(address.id)}>
-												Set as Default
-											</button>
-										{/if}
-										<button class="action-link delete" onclick={() => deleteAddress(address.id)}>
-											Delete
-										</button>
-									</div>
-								</div>
-							{/each}
-						</div>
-					{/if}
-				</div>
-			</section>
-
-			<!-- Security -->
-			<section class="content-card">
-				<div class="card-header">
-					<h2>Security</h2>
-					<button class="edit-btn" onclick={() => (isEditingPassword = !isEditingPassword)}>
-						Change Password
-					</button>
-				</div>
-				{#if isEditingPassword}
 					<div class="card-body">
 						<div class="info-grid">
 							<div class="info-item">
-								<label>Current Password</label>
-								<input type="password" placeholder="Enter current password" class="edit-input" />
+								<label>Full Name</label>
+								{#if isEditingProfile}
+									<input type="text" bind:value={profileForm.name} class="edit-input" />
+								{:else}
+									<p>{user.name}</p>
+								{/if}
 							</div>
 							<div class="info-item">
-								<label>New Password</label>
-								<input type="password" placeholder="Enter new password" class="edit-input" />
+								<label>Email</label>
+								{#if isEditingProfile}
+									<input type="email" bind:value={profileForm.email} class="edit-input" />
+								{:else}
+									<p>{user.email}</p>
+								{/if}
 							</div>
 							<div class="info-item">
-								<label>Confirm New Password</label>
-								<input type="password" placeholder="Confirm new password" class="edit-input" />
+								<label>Phone</label>
+								{#if isEditingProfile}
+									<input type="tel" bind:value={profileForm.phone} class="edit-input" />
+								{:else}
+									<p>{user.phone || 'Not provided'}</p>
+								{/if}
 							</div>
 						</div>
-						<div class="action-buttons">
-							<button class="save-btn">Update Password</button>
-							<button class="cancel-btn" onclick={() => (isEditingPassword = false)}>Cancel</button>
-						</div>
+						{#if isEditingProfile}
+							<div class="action-buttons">
+								<button class="save-btn" onclick={saveProfile}>Save Changes</button>
+								<button class="cancel-btn" onclick={() => (isEditingProfile = false)}>Cancel</button
+								>
+							</div>
+						{/if}
 					</div>
-				{:else}
+				</section>
+
+				<!-- Addresses Section -->
+				<section class="content-card" id="addresses">
+					<div class="card-header">
+						<h2>Saved Addresses</h2>
+						{#if !isAddingAddress}
+							<button class="edit-btn" onclick={startAddingAddress}> + Add Address </button>
+						{/if}
+					</div>
 					<div class="card-body">
-						<p class="security-info">••••••••</p>
-						<p class="hint">Last changed 3 months ago</p>
+						{#if isAddingAddress}
+							<div class="address-form">
+								<h3>{editingAddressId ? 'Edit Address' : 'Add New Address'}</h3>
+
+								<div class="form-grid">
+									<div class="form-group">
+										<label for="label">Label</label>
+										<select id="label" bind:value={newAddress.label} class="edit-input">
+											<option value="Home">Home</option>
+											<option value="Work">Work</option>
+											<option value="Other">Other</option>
+										</select>
+									</div>
+
+									<div class="form-group full-width">
+										<label for="street">Street Address *</label>
+										<input
+											type="text"
+											id="street"
+											bind:value={newAddress.street}
+											placeholder="123 Main Street"
+											class="edit-input"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label for="city">City *</label>
+										<input
+											type="text"
+											id="city"
+											bind:value={newAddress.city}
+											placeholder="New York"
+											class="edit-input"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label for="state">State</label>
+										<input
+											type="text"
+											id="state"
+											bind:value={newAddress.state}
+											placeholder="NY"
+											class="edit-input"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label for="zip">ZIP Code</label>
+										<input
+											type="text"
+											id="zip"
+											bind:value={newAddress.zip}
+											placeholder="10001"
+											class="edit-input"
+										/>
+									</div>
+
+									<div class="form-group">
+										<label for="country">Country</label>
+										<input
+											type="text"
+											id="country"
+											bind:value={newAddress.country}
+											placeholder="USA"
+											class="edit-input"
+										/>
+									</div>
+								</div>
+
+								<button class="search-map-btn" onclick={searchAddress}> 📍 Find on Map </button>
+
+								<div class="map-container" bind:this={mapContainer}></div>
+								<p class="map-hint">Drag the marker to adjust the location</p>
+
+								<div class="action-buttons">
+									<button class="save-btn" onclick={saveAddress}>
+										{editingAddressId ? 'Update Address' : 'Save Address'}
+									</button>
+									<button class="cancel-btn" onclick={cancelAddressForm}>Cancel</button>
+								</div>
+							</div>
+						{:else if userAddresses.length === 0}
+							<div class="empty-state">
+								<span class="empty-icon">📍</span>
+								<p>No addresses saved yet</p>
+								<button class="add-first-btn" onclick={startAddingAddress}>
+									Add Your First Address
+								</button>
+							</div>
+						{:else}
+							<div class="addresses-list">
+								{#each userAddresses as address}
+									<div class="address-item">
+										<div class="address-content">
+											<div class="address-header-row">
+												<h4>{address.label}</h4>
+												{#if address.isDefault}
+													<span class="default-badge">Default</span>
+												{/if}
+											</div>
+											<p class="address-text">
+												{address.street}<br />
+												{address.city}, {address.state}
+												{address.zip}<br />
+												{address.country}
+											</p>
+										</div>
+										<div class="address-actions">
+											<button class="action-link" onclick={() => startEditingAddress(address)}>
+												Edit
+											</button>
+											{#if !address.isDefault}
+												<button class="action-link" onclick={() => setDefaultAddress(address.id)}>
+													Set as Default
+												</button>
+											{/if}
+											<button class="action-link delete" onclick={() => deleteAddress(address.id)}>
+												Delete
+											</button>
+										</div>
+									</div>
+								{/each}
+							</div>
+						{/if}
 					</div>
-				{/if}
-			</section>
+				</section>
+
+				<!-- Security -->
+				<section class="content-card">
+					<div class="card-header">
+						<h2>Security</h2>
+						<button class="edit-btn" onclick={() => (isEditingPassword = !isEditingPassword)}>
+							Change Password
+						</button>
+					</div>
+					{#if isEditingPassword}
+						<div class="card-body">
+							<div class="info-grid">
+								<div class="info-item">
+									<label>Current Password</label>
+									<input type="password" placeholder="Enter current password" class="edit-input" />
+								</div>
+								<div class="info-item">
+									<label>New Password</label>
+									<input type="password" placeholder="Enter new password" class="edit-input" />
+								</div>
+								<div class="info-item">
+									<label>Confirm New Password</label>
+									<input type="password" placeholder="Confirm new password" class="edit-input" />
+								</div>
+							</div>
+							<div class="action-buttons">
+								<button class="save-btn">Update Password</button>
+								<button class="cancel-btn" onclick={() => (isEditingPassword = false)}
+									>Cancel</button
+								>
+							</div>
+						</div>
+					{:else}
+						<div class="card-body">
+							<p class="security-info">••••••••</p>
+							<p class="hint">Last changed 3 months ago</p>
+						</div>
+					{/if}
+				</section>
+			</div>
 		</div>
 	</div>
-</div>
+{/if}
 
 <style>
 	:global(body) {
@@ -722,6 +753,42 @@
 		color: #999;
 		font-size: 0.9rem;
 		margin: 0;
+	}
+
+	/* Empty State */
+	.empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 60px 20px;
+		text-align: center;
+	}
+
+	.empty-icon {
+		font-size: 4rem;
+		margin-bottom: 16px;
+		opacity: 0.5;
+	}
+
+	.empty-state p {
+		color: #666;
+		font-size: 1.1rem;
+		margin: 0 0 24px 0;
+	}
+
+	.add-first-btn {
+		background-color: #ff6b6b;
+		color: white;
+		border: none;
+		padding: 12px 24px;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.2s;
+	}
+
+	.add-first-btn:hover {
+		background-color: #ff5252;
 	}
 
 	/* Address Styles */
