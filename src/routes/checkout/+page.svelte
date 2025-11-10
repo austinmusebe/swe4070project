@@ -151,11 +151,6 @@
 	}
 
 	function completeOrder() {
-		if (!agreeToTerms) {
-			alert('Please agree to the terms and conditions');
-			return;
-		}
-
 		// Simulate order processing
 		const orderData = {
 			orderId: `ORD-${Date.now()}`,
@@ -321,13 +316,13 @@
 									type="tel"
 									id="phone"
 									bind:value={shippingInfo.phone}
-									placeholder="+1 (555) 123-4567"
+									placeholder="+254 712345678"
 									class="input-field"
 								/>
 							</div>
 
 							<div class="form-group full-width">
-								<label for="street">Street Address *</label>
+								<label for="street">Location *</label>
 								<input
 									type="text"
 									id="street"
@@ -512,18 +507,9 @@
 						</div>
 					</div>
 
-					<div class="terms-checkbox">
-						<input type="checkbox" id="terms" bind:checked={agreeToTerms} />
-						<label for="terms">
-							I agree to the <a href="/terms">Terms and Conditions</a>
-						</label>
-					</div>
-
 					<div class="button-group">
 						<button class="btn-back" onclick={prevStep}> ← Back to Payment </button>
-						<button class="btn-place-order" onclick={completeOrder} disabled={!agreeToTerms}>
-							Place Order 🎉
-						</button>
+						<button class="btn-place-order" onclick={completeOrder}> Place Order 🎉 </button>
 					</div>
 				</div>
 			{/if}
@@ -891,39 +877,6 @@
 		color: #1a1a1a;
 		font-weight: 700;
 		font-size: 1.1rem;
-	}
-
-	.terms-checkbox {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 30px;
-		padding: 16px;
-		background-color: #f8f8f8;
-		border-radius: 8px;
-	}
-
-	.terms-checkbox input[type='checkbox'] {
-		width: 20px;
-		height: 20px;
-		cursor: pointer;
-		accent-color: #ff6b6b;
-	}
-
-	.terms-checkbox label {
-		font-size: 0.95rem;
-		color: #666;
-		cursor: pointer;
-	}
-
-	.terms-checkbox a {
-		color: #ff6b6b;
-		text-decoration: none;
-		font-weight: 600;
-	}
-
-	.terms-checkbox a:hover {
-		text-decoration: underline;
 	}
 
 	/* Sidebar */

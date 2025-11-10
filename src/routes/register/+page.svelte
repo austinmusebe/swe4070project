@@ -9,7 +9,6 @@
 	let username = $state('');
 	let password = $state('');
 	let confirmPassword = $state('');
-	let agreeToTerms = $state(false);
 	let errorMessage = $state('');
 
 	function handleRegister() {
@@ -28,11 +27,6 @@
 
 		if (password.length < 6) {
 			errorMessage = 'Password must be at least 6 characters';
-			return;
-		}
-
-		if (!agreeToTerms) {
-			errorMessage = 'Please agree to the Terms & Conditions';
 			return;
 		}
 
@@ -61,20 +55,6 @@
 			<div class="welcome-content">
 				<h2>Join Us Today</h2>
 				<p>Start your journey with us and discover amazing products.</p>
-				<div class="features">
-					<div class="feature">
-						<span class="icon">✓</span>
-						<span>Fast & secure checkout</span>
-					</div>
-					<div class="feature">
-						<span class="icon">✓</span>
-						<span>Track your orders</span>
-					</div>
-					<div class="feature">
-						<span class="icon">✓</span>
-						<span>Exclusive deals</span>
-					</div>
-				</div>
 			</div>
 		</div>
 		<div class="right-card">
@@ -139,13 +119,6 @@
 							bind:value={confirmPassword}
 							placeholder="Re-enter your password"
 						/>
-					</div>
-
-					<div class="checkbox-group">
-						<input type="checkbox" id="terms" bind:checked={agreeToTerms} />
-						<label for="terms" class="checkbox-label">
-							I agree to the <a href="/terms">Terms & Conditions</a>
-						</label>
 					</div>
 
 					<div class="button-container">
@@ -358,27 +331,6 @@
 
 	input::placeholder {
 		color: #999;
-	}
-
-	.checkbox-group {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		margin-bottom: 24px;
-	}
-
-	input[type='checkbox'] {
-		width: 18px;
-		height: 18px;
-		cursor: pointer;
-		accent-color: #ff6b6b;
-	}
-
-	.checkbox-label {
-		font-size: 0.9rem;
-		color: #666;
-		margin: 0;
-		cursor: pointer;
 	}
 
 	.button-container {

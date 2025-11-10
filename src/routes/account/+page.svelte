@@ -39,7 +39,7 @@
 		city: '',
 		state: '',
 		zip: '',
-		country: 'USA'
+		country: 'Kenya'
 	});
 
 	// Map related
@@ -122,6 +122,9 @@
 		cancelAddressForm();
 	}
 
+	/**
+	 * @param {any} id
+	 */
 	function deleteAddress(id) {
 		if (!user) return;
 		if (confirm('Are you sure you want to delete this address?')) {
@@ -217,41 +220,11 @@
 				<div class="user-info">
 					<h1>{user.name}</h1>
 					<p>@{user.username}</p>
-					<span class="member-since">Member since {user.joinDate}</span>
 				</div>
 			</div>
 		</div>
 
 		<div class="account-content">
-			<div class="sidebar">
-				<nav class="sidebar-nav">
-					<a href="#profile" class="nav-item active">
-						<span class="icon">👤</span>
-						Profile
-					</a>
-					<a href="#orders" class="nav-item">
-						<span class="icon">📦</span>
-						Orders
-					</a>
-					<a href="#addresses" class="nav-item">
-						<span class="icon">📍</span>
-						Addresses
-					</a>
-					<a href="#payment" class="nav-item">
-						<span class="icon">💳</span>
-						Payment Methods
-					</a>
-					<a href="#settings" class="nav-item">
-						<span class="icon">⚙️</span>
-						Settings
-					</a>
-				</nav>
-				<button class="logout-btn" onclick={handleLogout}>
-					<span class="icon">🚪</span>
-					Logout
-				</button>
-			</div>
-
 			<div class="main-content">
 				<!-- Profile Information -->
 				<section class="content-card">
@@ -434,45 +407,6 @@
 						{/if}
 					</div>
 				</section>
-
-				<!-- Security -->
-				<section class="content-card">
-					<div class="card-header">
-						<h2>Security</h2>
-						<button class="edit-btn" onclick={() => (isEditingPassword = !isEditingPassword)}>
-							Change Password
-						</button>
-					</div>
-					{#if isEditingPassword}
-						<div class="card-body">
-							<div class="info-grid">
-								<div class="info-item">
-									<label>Current Password</label>
-									<input type="password" placeholder="Enter current password" class="edit-input" />
-								</div>
-								<div class="info-item">
-									<label>New Password</label>
-									<input type="password" placeholder="Enter new password" class="edit-input" />
-								</div>
-								<div class="info-item">
-									<label>Confirm New Password</label>
-									<input type="password" placeholder="Confirm new password" class="edit-input" />
-								</div>
-							</div>
-							<div class="action-buttons">
-								<button class="save-btn">Update Password</button>
-								<button class="cancel-btn" onclick={() => (isEditingPassword = false)}
-									>Cancel</button
-								>
-							</div>
-						</div>
-					{:else}
-						<div class="card-body">
-							<p class="security-info">••••••••</p>
-							<p class="hint">Last changed 3 months ago</p>
-						</div>
-					{/if}
-				</section>
 			</div>
 		</div>
 	</div>
@@ -544,11 +478,6 @@
 		font-size: 1.1rem;
 	}
 
-	.member-since {
-		font-size: 0.9rem;
-		color: #999;
-	}
-
 	.account-content {
 		max-width: 1200px;
 		margin: -40px auto 40px auto;
@@ -557,67 +486,6 @@
 		gap: 30px;
 		position: relative;
 		z-index: 2;
-	}
-
-	.sidebar {
-		flex: 0 0 250px;
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
-	}
-
-	.sidebar-nav {
-		background-color: white;
-		border-radius: 12px;
-		padding: 12px;
-		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-	}
-
-	.nav-item {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		padding: 14px 16px;
-		color: #666;
-		text-decoration: none;
-		border-radius: 8px;
-		transition: all 0.2s;
-		font-weight: 500;
-	}
-
-	.nav-item:hover {
-		background-color: #f5f5f5;
-		color: #1a1a1a;
-	}
-
-	.nav-item.active {
-		background-color: #ff6b6b;
-		color: white;
-	}
-
-	.icon {
-		font-size: 1.2rem;
-	}
-
-	.logout-btn {
-		width: 100%;
-		background-color: white;
-		border: 2px solid #ff6b6b;
-		color: #ff6b6b;
-		padding: 14px 16px;
-		border-radius: 12px;
-		font-weight: 600;
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 12px;
-		transition: all 0.2s;
-	}
-
-	.logout-btn:hover {
-		background-color: #ff6b6b;
-		color: white;
 	}
 
 	.main-content {
@@ -741,20 +609,6 @@
 		border-color: #ccc;
 		color: #333;
 	}
-
-	.security-info {
-		font-size: 1.5rem;
-		letter-spacing: 4px;
-		color: #1a1a1a;
-		margin: 0 0 8px 0;
-	}
-
-	.hint {
-		color: #999;
-		font-size: 0.9rem;
-		margin: 0;
-	}
-
 	/* Empty State */
 	.empty-state {
 		display: flex;
@@ -943,21 +797,6 @@
 		.account-content {
 			flex-direction: column;
 		}
-
-		.sidebar {
-			flex: 1;
-		}
-
-		.sidebar-nav {
-			display: flex;
-			overflow-x: auto;
-			gap: 8px;
-		}
-
-		.nav-item {
-			white-space: nowrap;
-		}
-
 		.account-header {
 			padding: 40px 30px;
 		}

@@ -9,18 +9,30 @@
 			id: '1',
 			name: 'Premium Headphones',
 			price: 99.99,
-			image: '',
+			image: 'src/lib/assets/headphones.jpg',
 			description: 'High-quality audio'
 		},
-		{ id: '2', name: 'Smart Watch', price: 199.99, image: '', description: 'Track your fitness' },
+		{
+			id: '2',
+			name: 'Smart Watch',
+			price: 199.99,
+			image: 'src/lib/assets/watch.jpg',
+			description: 'Track your fitness'
+		},
 		{
 			id: '3',
 			name: 'Wireless Keyboard',
 			price: 79.99,
-			image: '',
+			image: 'src/lib/assets/keyboard.jpg',
 			description: 'Mechanical switches'
 		},
-		{ id: '4', name: 'USB-C Cable', price: 19.99, image: '', description: 'Fast charging' }
+		{
+			id: '4',
+			name: 'USB-C Cable',
+			price: 19.99,
+			image: 'src/lib/assets/cable.jpg',
+			description: 'Fast charging'
+		}
 	];
 
 	function openCart() {
