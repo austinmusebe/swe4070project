@@ -1,5 +1,20 @@
 <script>
 	import Button from './Button.svelte';
+	import { currentUser } from '../stores/user.js';
+	import { goto } from '$app/navigation';
+
+	let user = $state(null);
+
+	$effect(() => {
+		currentUser.subscribe((u) => {
+			user = u;
+		});
+	});
+
+	function handleLogout() {
+		currentUser.logout();
+		goto('/login');
+	}
 </script>
 
 <header>
@@ -8,9 +23,14 @@
 			<li class="business"><a href="/">Bees' Ness</a></li>
 			<div class="nav-links">
 				<a href="/home">Home</a>
-				<a href="/account">Manage Account</a>
-				<a href="/login">Sign In</a>
-				<a href="/register" class="btn-register">Get Started</a>
+				{#if user}
+					<a href="/account">Manage Account</a>
+					<span class="user-greeting">Hello, {user.name.split(' ')[0]}</span>
+					<button class="btn-logout" onclick={handleLogout}>Logout</button>
+				{:else}
+					<a href="/login">Sign In</a>
+					<a href="/register" class="btn-register">Get Started</a>
+				{/if}
 			</div>
 		</ul>
 	</nav>
@@ -25,11 +45,9 @@
 		justify-content: space-between;
 		align-items: center;
 		list-style: none;
-		/* gap: 20px; */
 		margin: 0;
 	}
 	.business {
-		/* padding-right: 87%; */
 		font-size: 2rem;
 		white-space: nowrap;
 		padding-left: 10px;
@@ -38,6 +56,7 @@
 		display: flex;
 		gap: 20px;
 		padding-right: 10px;
+		align-items: center;
 	}
 	.nav-links a {
 		text-decoration: none;
@@ -59,5 +78,26 @@
 	.btn-register:hover {
 		background-color: #333 !important;
 		color: white !important;
+	}
+
+	.user-greeting {
+		color: #666;
+		font-weight: 500;
+		font-size: 0.95rem;
+	}
+
+	.btn-logout {
+		background-color: #ff6b6b;
+		color: white;
+		border: none;
+		padding: 8px 16px;
+		border-radius: 8px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s;
+	}
+
+	.btn-logout:hover {
+		background-color: #ff5252;
 	}
 </style>

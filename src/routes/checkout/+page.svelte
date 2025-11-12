@@ -439,7 +439,7 @@
 								id="cvv"
 								bind:value={paymentInfo.cvv}
 								placeholder="123"
-								maxlength="4"
+								maxlength="3"
 								class="input-field"
 							/>
 						</div>

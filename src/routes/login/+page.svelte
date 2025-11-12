@@ -28,7 +28,7 @@
 <div class="container">
 	<div class="login-section">
 		<div class="left-card">
-			<img src="src/lib/assets/undefined.jpeg" alt="Login visual" class="placeholder" />
+			<img src="" alt="Login visual" class="placeholder" />
 		</div>
 		<div class="right-card">
 			<div class="details">
@@ -68,8 +68,6 @@
 							class="user-pass"
 						/>
 					</div>
-
-					<a href="/forgot-password" class="forgot-link">Forgot password?</a>
 
 					<div class="button-container">
 						<button type="submit" class="login-btn">Log In</button>
@@ -226,13 +224,6 @@
 
 	input::placeholder {
 		color: #999;
-	}
-
-	.forgot-link {
-		display: block;
-		text-align: right;
-		font-size: 0.9rem;
-		margin-bottom: 24px;
 	}
 
 	.button-container {

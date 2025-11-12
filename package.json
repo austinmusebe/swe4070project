@@ -38,7 +38,9 @@
 		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
+		"dotenv": "^17.2.3",
 		"leaflet": "^1.9.4",
+		"mongodb": "^7.0.0",
 		"svelte-routing": "^2.13.0"
 	}
 }
