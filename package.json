@@ -39,6 +39,7 @@
 		"vite-plugin-devtools-json": "^1.0.0"
 	},
 	"dependencies": {
+		"bcrypt": "^6.0.0",
 		"dotenv": "^17.2.3",
 		"leaflet": "^1.9.4",
 		"mongodb": "^7.0.0",
