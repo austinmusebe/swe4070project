@@ -1,4 +1,5 @@
 <script>
+	import { enhance } from '$app/forms';
 	import { cart } from '../../stores/cart';
 	import { currentUser } from '../../stores/user';
 	import { addresses, defaultAddress } from '../../stores/addresses.js';
@@ -51,6 +52,34 @@
 			}
 		});
 	});
+	async function completeOrder() {
+		const orderData = {
+			orderId: `ORD-${Date.now()}`,
+			userId: user?._id,
+			items: cartItems,
+			shipping: shippingInfo,
+			payment: {
+				last4: paymentInfo.cardNumber.slice(-4),
+				cardName: paymentInfo.cardName
+			},
+			total: (total + 5 + total * 0.08).toFixed(2),
+			date: new Date().toISOString()
+		};
+
+		// Save order
+		const formData = new FormData();
+		formData.append('orderData', JSON.stringify(orderData));
+
+		try {
+			await fetch('?/placeOrder', { method: 'POST', body: formData });
+			alert('Order placed successfully!');
+			cart.clear();
+			goto('/account');
+		} catch (error) {
+			console.error('Failed to save order:', error);
+			alert('Order failed. Please try again.');
+		}
+	}
 
 	// Shipping Information
 	let shippingInfo = $state({
@@ -76,8 +105,10 @@
 	});
 
 	let currentStep = $state(1); // 1: Shipping, 2: Payment, 3: Review
-	let agreeToTerms = $state(false);
 
+	/**
+	 * @param {{ id: null; street: string; city: string; state: string; zip: string; country: string; }} address
+	 */
 	function selectSavedAddress(address) {
 		selectedAddressId = address.id;
 		useNewAddress = false;
@@ -148,31 +179,6 @@
 			return false;
 		}
 		return true;
-	}
-
-	function completeOrder() {
-		// Simulate order processing
-		const orderData = {
-			orderId: `ORD-${Date.now()}`,
-			userId: user?.id,
-			items: cartItems,
-			shipping: shippingInfo,
-			payment: {
-				last4: paymentInfo.cardNumber.slice(-4),
-				cardName: paymentInfo.cardName
-			},
-			total: (total + 5 + total * 0.08).toFixed(2),
-			date: new Date().toISOString()
-		};
-
-		// Save order to localStorage (you can replace this with API call)
-		const orders = JSON.parse(localStorage.getItem(`orders_${user?.id}`) || '[]');
-		orders.push(orderData);
-		localStorage.setItem(`orders_${user?.id}`, JSON.stringify(orders));
-
-		alert('Order placed successfully! 🎉');
-		cart.clear();
-		goto('/account');
 	}
 
 	function formatCardNumber(value) {
@@ -509,7 +515,7 @@
 
 					<div class="button-group">
 						<button class="btn-back" onclick={prevStep}> ← Back to Payment </button>
-						<button class="btn-place-order" onclick={completeOrder}> Place Order 🎉 </button>
+						<button class="btn-place-order" onclick={completeOrder}> Place Order </button>
 					</div>
 				</div>
 			{/if}

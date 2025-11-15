@@ -1,17 +1,31 @@
 <script>
-	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import { currentUser } from '../../stores/user.js';
 	import { addresses } from '../../stores/addresses.js';
+	import { invalidateAll } from '$app/navigation';
 
 	let user = $state(null);
+	/**
+	 * @type {string | any[] | null | undefined}
+	 */
 	let userAddresses = $state([]);
+	let { data } = $props();
+
+	$effect(() => {
+		if (data?.addresses) {
+			addresses.set(data.addresses);
+		}
+	});
 
 	$effect(() => {
 		currentUser.subscribe((u) => {
 			user = u;
 			if (!u) {
 				goto('/login');
+			} else if (u && typeof window !== 'undefined' && !window.location.search) {
+				goto(`/account?userId=${u._id}`, { replaceState: true, noScroll: true });
 			}
 		});
 	});
@@ -62,10 +76,21 @@
 		goto('/login');
 	}
 
-	function saveProfile() {
+	async function saveProfile() {
 		if (user) {
-			currentUser.updateProfile(profileForm);
-			isEditingProfile = false;
+			const formData = new FormData();
+			formData.append('userId', user._id);
+			formData.append('name', profileForm.name);
+			formData.append('email', profileForm.email);
+			formData.append('phone', profileForm.phone);
+
+			const response = await fetch('?/updateProfile', { method: 'POST', body: formData });
+			const result = await response.json();
+
+			if (result.success) {
+				currentUser.set({ ...user, ...profileForm });
+				isEditingProfile = false;
+			}
 		}
 	}
 
@@ -103,7 +128,7 @@
 		};
 	}
 
-	function saveAddress() {
+	async function saveAddress() {
 		if (!newAddress.street || !newAddress.city) {
 			alert('Please fill in all required fields');
 			return;
@@ -111,30 +136,51 @@
 
 		if (!user) return;
 
+		const formData = new FormData();
+		formData.append('userId', user._id);
+
 		if (editingAddressId) {
-			// Update existing address
-			addresses.update(editingAddressId, newAddress, user.id);
+			formData.append('addressId', editingAddressId);
+			formData.append('updates', JSON.stringify(newAddress));
+			await fetch('?/updateAddress', { method: 'POST', body: formData });
 		} else {
-			// Add new address
-			addresses.add(newAddress, user.id);
+			formData.append('address', JSON.stringify(newAddress));
+			await fetch('?/addAddress', { method: 'POST', body: formData });
 		}
 
+		// Reload addresses
+		// const response = await fetch(`/account?userId=${user._id}`);
+		// const html = await response.text();
+		// location.reload();
+		await invalidateAll();
 		cancelAddressForm();
 	}
 
 	/**
 	 * @param {any} id
 	 */
-	function deleteAddress(id) {
+	async function deleteAddress(id) {
 		if (!user) return;
 		if (confirm('Are you sure you want to delete this address?')) {
-			addresses.delete(id, user.id);
+			const formData = new FormData();
+			formData.append('addressId', id);
+			await fetch('?/deleteAddress', { method: 'POST', body: formData });
+			// location.reload();
+			await invalidateAll();
 		}
 	}
 
-	function setDefaultAddress(id) {
+	/**
+	 * @param {any} id
+	 */
+	async function setDefaultAddress(id) {
 		if (!user) return;
-		addresses.setDefault(id, user.id);
+		const formData = new FormData();
+		formData.append('addressId', id);
+		formData.append('userId', user._id);
+		await fetch('?/setDefault', { method: 'POST', body: formData });
+		// location.reload();
+		await invalidateAll();
 	}
 
 	async function initMap() {

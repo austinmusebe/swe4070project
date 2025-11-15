@@ -1,8 +1,9 @@
 <script>
-	import Button from '../../components/Button.svelte';
 	import { currentUser } from '../../stores/user.js';
+	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 
+	let { form } = $props();
 	let firstName = $state('');
 	let lastName = $state('');
 	let email = $state('');
@@ -11,42 +12,13 @@
 	let confirmPassword = $state('');
 	let errorMessage = $state('');
 
-	function handleRegister() {
-		errorMessage = '';
-
-		// Validation
-		if (!firstName || !lastName || !email || !username || !password || !confirmPassword) {
-			errorMessage = 'Please fill in all fields';
-			return;
-		}
-
-		if (password !== confirmPassword) {
-			errorMessage = 'Passwords do not match';
-			return;
-		}
-
-		if (password.length < 6) {
-			errorMessage = 'Password must be at least 6 characters';
-			return;
-		}
-
-		// Register user
-		const result = currentUser.register({
-			firstName,
-			lastName,
-			name: `${firstName} ${lastName}`,
-			email,
-			username,
-			password,
-			phone: ''
-		});
-
-		if (result.success) {
+	// Handle successful registration
+	$effect(() => {
+		if (form?.success && form?.user) {
+			currentUser.set(form.user);
 			goto('/home');
-		} else {
-			errorMessage = result.error;
 		}
-	}
+	});
 </script>
 
 <div class="container">
@@ -62,33 +34,46 @@
 				<h1>Create Account</h1>
 				<p>Already have an account? <a href="/login">Sign in</a></p>
 
-				{#if errorMessage}
+				{#if form?.error}
 					<div class="error-message">
-						{errorMessage}
+						{form.error}
 					</div>
 				{/if}
 
-				<form
-					onsubmit={(e) => {
-						e.preventDefault();
-						handleRegister();
-					}}
-				>
+				<form method="POST" use:enhance>
 					<div class="name-section">
 						<div class="input-group">
 							<label for="firstName">First Name</label>
-							<input type="text" id="firstName" bind:value={firstName} placeholder="John" />
+							<input
+								type="text"
+								id="firstName"
+								bind:value={firstName}
+								name="firstName"
+								placeholder="John"
+							/>
 						</div>
 
 						<div class="input-group">
 							<label for="lastName">Last Name</label>
-							<input type="text" id="lastName" bind:value={lastName} placeholder="Doe" />
+							<input
+								type="text"
+								id="lastName"
+								bind:value={lastName}
+								placeholder="Doe"
+								name="lastName"
+							/>
 						</div>
 					</div>
 
 					<div class="input-group">
 						<label for="email">Email</label>
-						<input type="email" id="email" bind:value={email} placeholder="john.doe@example.com" />
+						<input
+							type="email"
+							id="email"
+							name="email"
+							bind:value={email}
+							placeholder="john.doe@example.com"
+						/>
 					</div>
 
 					<div class="input-group">
@@ -96,6 +81,7 @@
 						<input
 							type="text"
 							id="username"
+							name="username"
 							bind:value={username}
 							placeholder="Choose a username"
 						/>
@@ -106,6 +92,7 @@
 						<input
 							type="password"
 							id="password"
+							name="password"
 							bind:value={password}
 							placeholder="Create a strong password"
 						/>
@@ -116,6 +103,7 @@
 						<input
 							type="password"
 							id="confirmPassword"
+							name="confirmPassword"
 							bind:value={confirmPassword}
 							placeholder="Re-enter your password"
 						/>
@@ -197,32 +185,6 @@
 		color: #ccc;
 		margin: 0 0 40px 0;
 		line-height: 1.6;
-	}
-
-	.features {
-		display: flex;
-		flex-direction: column;
-		gap: 20px;
-	}
-
-	.feature {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		font-size: 1rem;
-		color: #e0e0e0;
-	}
-
-	.icon {
-		width: 28px;
-		height: 28px;
-		background-color: #ff6b6b;
-		border-radius: 50%;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		font-weight: bold;
-		flex-shrink: 0;
 	}
 
 	.right-card {

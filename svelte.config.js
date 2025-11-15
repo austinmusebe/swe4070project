@@ -10,4 +10,11 @@ const config = {
 	}
 };
 
-export default config;
+// export default config;
+export default {
+	compilerOptions: {
+		experimental: {
+			async: true
+		}
+	}
+};

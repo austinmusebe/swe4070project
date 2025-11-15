@@ -1,28 +1,19 @@
 <script>
-	import Button from '../../components/Button.svelte';
 	import { currentUser } from '../../stores/user.js';
+	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 
+	let { form } = $props();
 	let email = $state('');
 	let password = $state('');
-	let errorMessage = $state('');
 
-	function handleLogin() {
-		errorMessage = '';
-
-		if (!email || !password) {
-			errorMessage = 'Please fill in all fields';
-			return;
-		}
-
-		const result = currentUser.login(email, password);
-
-		if (result.success) {
+	// Handle successful login
+	$effect(() => {
+		if (form?.success && form?.user) {
+			currentUser.set(form.user);
 			goto('/home');
-		} else {
-			errorMessage = result.error;
 		}
-	}
+	});
 </script>
 
 <div class="container">
@@ -35,23 +26,19 @@
 				<h1>Welcome Back</h1>
 				<p>Don't have an account? <a href="/register">Sign up</a></p>
 
-				{#if errorMessage}
+				{#if form?.error}
 					<div class="error-message">
-						{errorMessage}
+						{form.error}
 					</div>
 				{/if}
 
-				<form
-					onsubmit={(e) => {
-						e.preventDefault();
-						handleLogin();
-					}}
-				>
+				<form method="POST" use:enhance>
 					<div class="input-group">
 						<label for="email">Email</label>
 						<input
 							type="email"
 							id="email"
+							name="email"
 							bind:value={email}
 							placeholder="Enter your email"
 							class="user-pass"
@@ -63,6 +50,7 @@
 						<input
 							type="password"
 							id="password"
+							name="password"
 							bind:value={password}
 							placeholder="Enter your password"
 							class="user-pass"
