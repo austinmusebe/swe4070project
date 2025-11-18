@@ -20,7 +20,7 @@
 <header>
 	<nav>
 		<ul class="header-content">
-			<li class="business"><a href="/">Bees' Ness</a></li>
+			<li class="business"><a href="/">SCAMMER SHOP</a></li>
 			<div class="nav-links">
 				<a href="/home">Home</a>
 				{#if user}
@@ -51,6 +51,10 @@
 		font-size: 2rem;
 		white-space: nowrap;
 		padding-left: 10px;
+	}
+	.business a {
+		color: orangered;
+		font-weight: 800;
 	}
 	.nav-links {
 		display: flex;

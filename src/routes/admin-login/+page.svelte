@@ -1,17 +1,15 @@
 <script>
-	import { currentUser } from '../../stores/user.js';
+	import { currentAdmin } from '../../stores/admin.js';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 
 	let { form } = $props();
-	let email = $state('');
-	let password = $state('');
 
 	// Handle successful login
 	$effect(() => {
-		if (form?.success && form?.user) {
-			currentUser.set(form.user);
-			goto('/home');
+		if (form?.success) {
+			currentAdmin.set({ username: 'admin', role: 'admin' });
+			goto('/admin-dashboard');
 		}
 	});
 </script>
@@ -19,12 +17,16 @@
 <div class="container">
 	<div class="login-section">
 		<div class="left-card">
-			<img src="" alt="Login visual" class="placeholder" />
+			<div class="admin-welcome">
+				<h2>Admin Portal</h2>
+				<p>Secure access to dashboard and analytics</p>
+				<div class="icon">🔐</div>
+			</div>
 		</div>
 		<div class="right-card">
 			<div class="details">
-				<h1>Welcome Back</h1>
-				<p>Don't have an account? <a href="/register">Sign up</a></p>
+				<h1>Admin Login</h1>
+				<p><a href="/login">← Back to User Login</a></p>
 
 				{#if form?.error}
 					<div class="error-message">
@@ -34,13 +36,12 @@
 
 				<form method="POST" use:enhance>
 					<div class="input-group">
-						<label for="email">Email</label>
+						<label for="username">Username</label>
 						<input
-							type="email"
-							id="email"
-							name="email"
-							bind:value={email}
-							placeholder="Enter your email"
+							type="text"
+							id="username"
+							name="username"
+							placeholder="Enter admin username"
 							class="user-pass"
 						/>
 					</div>
@@ -51,19 +52,15 @@
 							type="password"
 							id="password"
 							name="password"
-							bind:value={password}
-							placeholder="Enter your password"
+							placeholder="Enter admin password"
 							class="user-pass"
 						/>
 					</div>
 
 					<div class="button-container">
-						<button type="submit" class="login-btn">Log In</button>
+						<button type="submit" class="login-btn">Admin Login</button>
 					</div>
 				</form>
-				<div class="admin-link">
-					<a href="/admin-login">Admin Login →</a>
-				</div>
 			</div>
 		</div>
 	</div>
@@ -118,13 +115,26 @@
 			radial-gradient(circle at 80% 80%, rgba(255, 193, 7, 0.1) 0%, transparent 50%);
 	}
 
-	.placeholder {
-		max-width: 100%;
-		max-height: 400px;
-		border-radius: 12px;
-		object-fit: cover;
+	.admin-welcome {
 		position: relative;
 		z-index: 1;
+		color: white;
+		text-align: center;
+	}
+
+	.admin-welcome h2 {
+		font-size: 2.5rem;
+		margin: 0 0 16px 0;
+	}
+
+	.admin-welcome p {
+		font-size: 1.1rem;
+		color: #ccc;
+		margin: 0 0 40px 0;
+	}
+
+	.icon {
+		font-size: 5rem;
 	}
 
 	.right-card {
@@ -248,27 +258,8 @@
 			min-height: 250px;
 		}
 
-		.placeholder {
-			max-height: 200px;
-		}
-
 		h1 {
 			font-size: 1.75rem;
 		}
-	}
-	.admin-link {
-		text-align: center;
-		margin-top: 24px;
-		padding-top: 24px;
-		border-top: 1px solid #e0e0e0;
-	}
-
-	.admin-link a {
-		color: #999;
-		font-size: 0.9rem;
-	}
-
-	.admin-link a:hover {
-		color: #ff6b6b;
 	}
 </style>

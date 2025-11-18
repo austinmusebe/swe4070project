@@ -210,7 +210,7 @@
 		// Update address when marker is dragged
 		marker.on('dragend', async function (e) {
 			const position = marker.getLatLng();
-			// Reverse geocoding using Nominatim (OpenStreetMap)
+			// Reverse geocoding
 			try {
 				const response = await fetch(
 					`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.lat}&lon=${position.lng}`
@@ -341,7 +341,7 @@
 									</div>
 
 									<div class="form-group full-width">
-										<label for="street">Street Address *</label>
+										<label for="street">Location Name: *</label>
 										<input
 											type="text"
 											id="street"
