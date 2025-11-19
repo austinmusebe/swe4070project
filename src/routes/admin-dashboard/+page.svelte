@@ -1,6 +1,7 @@
 <script>
 	import { currentAdmin } from '../../stores/admin.js';
 	import { goto } from '$app/navigation';
+	import { DollarSign, Package, Users } from 'lucide-svelte';
 
 	let admin = $state(null);
 	let { data } = $props();
@@ -33,7 +34,7 @@
 		<!-- Stats Cards -->
 		<div class="stats-grid">
 			<div class="stat-card revenue">
-				<div class="stat-icon">💰</div>
+				<div class="stat-icon"><DollarSign size="32" /></div>
 				<div class="stat-info">
 					<h3>Total Revenue</h3>
 					<p class="stat-value">${stats.totalRevenue.toFixed(2)}</p>
@@ -41,7 +42,7 @@
 			</div>
 
 			<div class="stat-card orders">
-				<div class="stat-icon">📦</div>
+				<div class="stat-icon"><Package size="32" /></div>
 				<div class="stat-info">
 					<h3>Total Orders</h3>
 					<p class="stat-value">{stats.totalOrders}</p>
@@ -49,7 +50,7 @@
 			</div>
 
 			<div class="stat-card users">
-				<div class="stat-icon">👥</div>
+				<div class="stat-icon"><Users size="32" /></div>
 				<div class="stat-info">
 					<h3>Total Users</h3>
 					<p class="stat-value">{stats.totalUsers}</p>
