@@ -20,7 +20,6 @@
 			<div class="admin-welcome">
 				<h2>Admin Portal</h2>
 				<p>Secure access to dashboard and analytics</p>
-				<div class="icon">🔐</div>
 			</div>
 		</div>
 		<div class="right-card">

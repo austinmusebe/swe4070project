@@ -20,7 +20,7 @@
 <header>
 	<nav>
 		<ul class="header-content">
-			<li class="business"><a href="/">SCAMMER SHOP</a></li>
+			<li class="business"><a href="/home">SCAMMER SHOP</a></li>
 			<div class="nav-links">
 				<a href="/home">Home</a>
 				{#if user}
