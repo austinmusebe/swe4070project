@@ -1,6 +1,7 @@
 <script>
 	import { cart, isCartOpen } from '../stores/cart.js';
 	import { goto } from '$app/navigation';
+	import CartItem from './CartItem.svelte';
 
 	let cartItems = $state([]);
 	let showCart = $state(false);
@@ -58,38 +59,7 @@
 				{:else}
 					<div class="cart-items">
 						{#each cartItems as item}
-							<div class="cart-item">
-								<div class="item-image">
-									{#if item.product.image}
-										<img src={item.product.image} alt={item.product.name} />
-									{:else}
-										<div class="placeholder-small">No Image</div>
-									{/if}
-								</div>
-								<div class="item-details">
-									<h3>{item.product.name}</h3>
-									<p class="item-price">${item.product.price.toFixed(2)}</p>
-								</div>
-								<div class="item-quantity">
-									<button
-										class="qty-btn"
-										onclick={() => updateQuantity(item.product.id, item.quantity - 1)}
-									>
-										-
-									</button>
-									<span>{item.quantity}</span>
-									<button
-										class="qty-btn"
-										onclick={() => updateQuantity(item.product.id, item.quantity + 1)}
-									>
-										+
-									</button>
-								</div>
-								<div class="item-total">
-									<p>${(item.product.price * item.quantity).toFixed(2)}</p>
-								</div>
-								<button class="remove-btn" onclick={() => removeItem(item.product.id)}> 🗑️ </button>
-							</div>
+							<CartItem {item} />
 						{/each}
 					</div>
 
@@ -99,6 +69,7 @@
 							<span class="total-amount">${total.toFixed(2)}</span>
 						</div>
 						<button class="checkout-btn" onclick={proceedToCheckout}> Proceed to Checkout </button>
+						<a href="/cart" class="view-cart-link" onclick={closeCart}> View Full Cart </a>
 						<button class="continue-btn" onclick={closeCart}> Continue Shopping </button>
 					</div>
 				{/if}
@@ -386,6 +357,26 @@
 
 	.checkout-btn:hover {
 		background-color: #ff5252;
+	}
+
+	.view-cart-link {
+		display: block;
+		width: 100%;
+		box-sizing: border-box;
+		text-align: center;
+		padding: 12px;
+		margin-bottom: 10px;
+		color: #ff6b6b;
+		text-decoration: none;
+		font-weight: 600;
+		border: 2px solid #ff6b6b;
+		border-radius: 10px;
+		transition: all 0.2s;
+	}
+
+	.view-cart-link:hover {
+		background-color: #ff6b6b;
+		color: white;
 	}
 
 	.continue-btn {
