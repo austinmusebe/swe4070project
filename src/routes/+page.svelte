@@ -31,6 +31,9 @@
 <!-- </div> -->
 
 <style>
+	.start-button:hover {
+		cursor: 'pointer';
+	}
 	.start-button {
 		background: orangered;
 		font-size: 1.5rem;
