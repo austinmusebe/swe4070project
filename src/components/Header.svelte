@@ -1,9 +1,11 @@
 <script>
 	import Button from './Button.svelte';
 	import { currentUser } from '../stores/user.js';
+	import { cart, isCartOpen } from '../stores/cart.js';
 	import { goto } from '$app/navigation';
 
 	let user = $state(null);
+	let cartItems = $state([]);
 
 	$effect(() => {
 		currentUser.subscribe((u) => {
@@ -11,9 +13,21 @@
 		});
 	});
 
+	$effect(() => {
+		cart.subscribe((items) => {
+			cartItems = items;
+		});
+	});
+
+	let cartCount = $derived(cartItems.reduce((sum, item) => sum + item.quantity, 0));
+
 	function handleLogout() {
 		currentUser.logout();
 		goto('/login');
+	}
+
+	function openCart() {
+		isCartOpen.set(true);
 	}
 </script>
 
@@ -23,6 +37,12 @@
 			<li class="business"><a href="/home">SCAMMER SHOP</a></li>
 			<div class="nav-links">
 				<a href="/home">Home</a>
+				<button class="btn-cart" onclick={openCart}>
+					🛒 Cart
+					{#if cartCount > 0}
+						<span class="cart-badge">{cartCount}</span>
+					{/if}
+				</button>
 				{#if user}
 					<a href="/account">Manage Account</a>
 					<span class="user-greeting">Hello, {user.name.split(' ')[0]}</span>
@@ -103,5 +123,40 @@
 
 	.btn-logout:hover {
 		background-color: #ff5252;
+	}
+
+	.btn-cart {
+		background: white;
+		border: 1px solid #ff6b6b;
+		color: #ff6b6b;
+		padding: 7px 14px;
+		border-radius: 8px;
+		font-weight: 600;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		transition: all 0.2s;
+		font-size: 0.95rem;
+	}
+
+	.btn-cart:hover {
+		background-color: #ff6b6b;
+		color: white;
+	}
+
+	.cart-badge {
+		background-color: #ff6b6b;
+		color: white;
+		border-radius: 12px;
+		padding: 2px 7px;
+		font-size: 0.75rem;
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.btn-cart:hover .cart-badge {
+		background-color: white;
+		color: #ff6b6b;
 	}
 </style>
