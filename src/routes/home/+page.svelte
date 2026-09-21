@@ -1,6 +1,5 @@
 <script>
 	import ProductCard from '../../components/ProductCard.svelte';
-	import CartPopup from '../../components/CartPopup.svelte';
 	import { isCartOpen } from '../../stores/cart.js';
 
 	// Sample products - replace with real data
@@ -55,8 +54,6 @@
 		{/each}
 	</div>
 </div>
-
-<CartPopup />
 
 <style>
 	.container {
